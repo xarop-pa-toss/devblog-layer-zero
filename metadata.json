@@ -1,0 +1,6 @@
+{
+  "name": "FLAGFORGE // 90s DevOps & Engineering Hub",
+  "description": "Personal engineering hub, technical blog, interactive 12-week DevOps roadmap, and FlagForge 4-app feature flag architecture showcase styled after 90s PlayStation 1 demo discs with Bayer dithering.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

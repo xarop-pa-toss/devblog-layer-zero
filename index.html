@@ -1,0 +1,2089 @@
+<!DOCTYPE html>
+<html lang="en" translate="no">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="google" content="notranslate" />
+  <title>Layer Zero — Ricardo Giro</title>
+  <meta name="description" content="Layer Zero — Personal engineering hub, Git-backed logs, Operation Flaggo specification, and interactive DevOps roadmap for Ricardo Giro (xarop_pa_toss)." />
+  <meta property="og:title" content="Layer Zero — Ricardo Giro" />
+  <meta property="og:description" content="Layer Zero — Personal engineering hub, Git-backed logs, Operation Flaggo specification, and interactive DevOps roadmap for Ricardo Giro (xarop_pa_toss)." />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;family=IBM+Plex+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet" />
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <style>
+    /* --- PALETTE: #F1F3F4 | #79BAC1 | #2A7886 | #512B58 --- */
+    /* Restrained Old-School Operating System / Workstation Style (Light Mode) */
+    :root {
+      --bg-canvas: #F1F3F4;
+      --bg-window: #FFFFFF;
+      --bg-subtle: #E6ECEE;
+      --cyan-soft: #79BAC1;
+      --teal-deep: #2A7886;
+      --plum-deep: #512B58;
+      --ink-main: #231926;
+      --ink-muted: #4E5D63;
+      --border-os: #2A7886;
+      --border-plum: #512B58;
+      --font-display: 'Chakra Petch', sans-serif;
+      --font-sans: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'IBM Plex Mono', monospace;
+    }
+
+    *, ::before, ::after {
+      box-sizing: border-box;
+      border-width: 0;
+      border-style: solid;
+      border-color: var(--border-os);
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      min-height: 100%;
+      background-color: var(--bg-canvas);
+      color: var(--ink-main);
+      font-family: var(--font-sans);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    h1, h2, h3, h4, p { margin: 0; }
+    button, input, select, textarea {
+      font-family: inherit;
+      font-size: 100%;
+      line-height: inherit;
+      color: inherit;
+      margin: 0;
+      padding: 0;
+      background-color: transparent;
+    }
+    button, select { cursor: pointer; }
+    a { color: inherit; text-decoration: none; }
+    table { border-collapse: collapse; width: 100%; }
+
+    .font-display { font-family: var(--font-display); }
+    .font-mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+    .tabular-nums { font-variant-numeric: tabular-nums; }
+
+    /* Subtle 90s OS Desktop Dither & Window Chrome */
+    .os-desktop {
+      background-color: var(--bg-canvas);
+      background-image: radial-gradient(rgba(42, 120, 134, 0.14) 1px, transparent 0);
+      background-size: 8px 8px;
+    }
+
+    .os-window {
+      background-color: var(--bg-window);
+      border: 1.5px solid var(--plum-deep);
+      box-shadow: 3px 3px 0px rgba(81, 43, 88, 0.16);
+    }
+
+    .os-titlebar {
+      background-color: var(--plum-deep);
+      color: var(--bg-canvas);
+      padding: 0.55rem 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.35rem 1rem;
+      border-bottom: 1.5px solid var(--plum-deep);
+    }
+
+    .os-titlebar-teal {
+      background-color: var(--teal-deep);
+      color: #FFFFFF;
+      background-image:
+        linear-gradient(45deg, rgba(121, 186, 193, 0.16) 25%, transparent 25%),
+        linear-gradient(-45deg, rgba(121, 186, 193, 0.16) 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, rgba(121, 186, 193, 0.16) 75%),
+        linear-gradient(-45deg, transparent 75%, rgba(121, 186, 193, 0.16) 75%);
+      background-size: 4px 4px;
+      background-position: 0 0, 0 2px, 2px -2px, -2px 0;
+    }
+
+    .os-panel {
+      background-color: var(--bg-canvas);
+      border: 1px solid rgba(42, 120, 134, 0.45);
+    }
+
+    .os-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.45rem;
+      padding: 0.5rem 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      font-weight: 500;
+      white-space: nowrap;
+      flex-shrink: 0;
+      background-color: var(--bg-canvas);
+      color: var(--plum-deep);
+      border: 1.5px solid var(--plum-deep);
+      box-shadow: 2px 2px 0px rgba(81, 43, 88, 0.2);
+      transition: transform 100ms ease, background-color 120ms ease;
+    }
+
+    .os-btn:hover {
+      background-color: var(--cyan-soft);
+      color: var(--ink-main);
+    }
+
+    .os-btn:active {
+      transform: translate(1px, 1px);
+      box-shadow: 1px 1px 0px rgba(81, 43, 88, 0.2);
+    }
+
+    .os-btn-primary {
+      background-color: var(--plum-deep);
+      color: #FFFFFF;
+      border-color: var(--plum-deep);
+      font-weight: 600;
+    }
+
+    .os-btn-primary:hover {
+      background-color: var(--teal-deep);
+      border-color: var(--plum-deep);
+      color: #FFFFFF;
+    }
+
+    .os-btn-teal {
+      background-color: var(--teal-deep);
+      color: #FFFFFF;
+      border-color: var(--plum-deep);
+      font-weight: 600;
+    }
+
+    .os-btn-teal:hover {
+      background-color: var(--cyan-soft);
+      color: var(--plum-deep);
+    }
+
+    .os-input {
+      width: 100%;
+      padding: 0.6rem 0.85rem;
+      background-color: #FFFFFF;
+      border: 1.5px solid var(--teal-deep);
+      color: var(--ink-main);
+      font-size: 0.9rem;
+    }
+
+    .os-input:focus {
+      outline: none;
+      border-color: var(--plum-deep);
+      box-shadow: 2px 2px 0px rgba(121, 186, 193, 0.5);
+    }
+
+    .os-progress-track {
+      width: 100%;
+      height: 12px;
+      background-color: var(--bg-canvas);
+      border: 1px solid var(--plum-deep);
+      padding: 1px;
+    }
+
+    .os-progress-fill {
+      height: 100%;
+      background-color: var(--teal-deep);
+      background-image:
+        linear-gradient(45deg, rgba(121, 186, 193, 0.35) 25%, transparent 25%),
+        linear-gradient(-45deg, rgba(121, 186, 193, 0.35) 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, rgba(121, 186, 193, 0.35) 75%),
+        linear-gradient(-45deg, transparent 75%, rgba(121, 186, 193, 0.35) 75%);
+      background-size: 4px 4px;
+      transition: width 180ms ease;
+    }
+
+    /* --- SPACIOUS LAYOUT SYSTEM --- */
+    .shell-container {
+      max-width: 1160px;
+      margin: 0 auto;
+      padding: 2.5rem 1.75rem 5.5rem 1.75rem;
+    }
+
+    .top-bar {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      background-color: var(--bg-canvas);
+      border-bottom: 2px solid var(--plum-deep);
+      padding: 0.9rem 2rem;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem 2rem;
+    }
+
+    .nav-links {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.5rem 1.75rem;
+    }
+
+    .nav-link {
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      color: var(--ink-muted);
+      padding: 0.3rem 0;
+      border-bottom: 2px solid transparent;
+      white-space: nowrap;
+      flex-shrink: 0;
+      transition: color 120ms ease, border-color 120ms ease;
+    }
+
+    .nav-link:hover {
+      color: var(--plum-deep);
+    }
+
+    .nav-link-active {
+      color: var(--plum-deep);
+      border-bottom-color: var(--teal-deep);
+      font-weight: 600;
+    }
+
+    .grid-2 { display: grid; grid-template-columns: repeat(1, minmax(0, 1fr)); gap: 1.75rem; }
+    .grid-3 { display: grid; grid-template-columns: repeat(1, minmax(0, 1fr)); gap: 1.5rem; }
+    .grid-4 { display: grid; grid-template-columns: repeat(1, minmax(0, 1fr)); gap: 1.25rem; }
+    .grid-6 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.85rem; }
+
+    @media (min-width: 768px) {
+      .grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .grid-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+      .grid-6 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    }
+
+    @media (min-width: 1024px) {
+      .grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .grid-6 { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 767px) {
+      .top-bar { padding: 0.75rem 1.15rem; gap: 0.65rem 1rem; }
+      .shell-container { padding: 1.5rem 1rem 5rem 1rem; }
+      .nav-links {
+        order: 3;
+        width: 100%;
+        padding-top: 0.5rem;
+        border-top: 1px solid rgba(42, 120, 134, 0.35);
+        justify-content: flex-start;
+        gap: 0.35rem 1.15rem;
+      }
+      .nav-link {
+        font-size: 0.78rem;
+      }
+    }
+
+    /* --- PERSISTENT BOTTOM SCROLLING COMMIT BAR (COMPACT & SLOW) --- */
+    .commit-ticker-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 40;
+      height: 1.65rem;
+      background-color: var(--plum-deep);
+      color: var(--bg-canvas);
+      border-top: 1.5px solid var(--teal-deep);
+      display: flex;
+      align-items: center;
+      overflow: hidden;
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      letter-spacing: 0.01em;
+    }
+
+    .commit-ticker-label {
+      height: 100%;
+      padding: 0 0.65rem;
+      background-color: var(--cyan-soft);
+      color: var(--plum-deep);
+      font-weight: 600;
+      font-size: 0.66rem;
+      display: flex;
+      align-items: center;
+      white-space: nowrap;
+      flex-shrink: 0;
+      border-right: 1.5px solid var(--plum-deep);
+    }
+
+    .commit-ticker-viewport {
+      flex: 1;
+      overflow: hidden;
+      height: 100%;
+      display: flex;
+      align-items: center;
+    }
+
+    @keyframes os-marquee {
+      0% { transform: translate3d(0%, 0, 0); }
+      100% { transform: translate3d(-50%, 0, 0); }
+    }
+
+    .commit-ticker-track {
+      display: flex;
+      align-items: center;
+      width: max-content;
+      animation: os-marquee 115s linear infinite;
+    }
+
+    .commit-ticker-track:hover {
+      animation-play-state: paused;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .commit-ticker-track { animation: none; }
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      background-color: rgba(35, 25, 38, 0.55);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.25rem;
+    }
+  </style>
+</head>
+<body class="os-desktop notranslate" translate="no">
+  <div id="root"></div>
+
+  <script>
+    const { useState, useEffect, useMemo } = React;
+    const h = React.createElement;
+
+    function safeGet(key, fallback) {
+      try {
+        const raw = localStorage.getItem(key);
+        if (!raw) return fallback;
+        const parsed = JSON.parse(raw);
+        return parsed !== null && parsed !== undefined ? parsed : fallback;
+      } catch (e) {
+        return fallback;
+      }
+    }
+
+    function safeSet(key, val) {
+      try {
+        localStorage.setItem(key, JSON.stringify(val));
+      } catch (e) {}
+    }
+
+    const STATUS = {
+      PENDING: 'pending',
+      AI_ASSISTED: 'ai_assisted',
+      INDEPENDENT: 'independent'
+    };
+
+    // --- RICARDO GIRO (xarop_pa_toss) PROFILE ---
+    const DEFAULT_BIO = {
+      name: 'Ricardo Giro',
+      handle: 'xarop_pa_toss',
+      githubUser: 'xarop-pa-toss',
+      githubUrl: 'https://github.com/xarop-pa-toss',
+      logsRepo: 'xarop-pa-toss/layer-zero',
+      logsPath: 'logs',
+      giteaBaseUrl: '',
+      giteaUser: 'xarop_pa_toss',
+      role: 'Infrastructure & DevOps Engineer',
+      summary: 'Systems and infrastructure engineer transitioning operational administration experience into reproducible Linux, cloud networking, Terraform IaC, Docker containerization, and automated CI/CD pipelines.',
+      pitch: 'Building Flaggo — a lightweight, self-hosted 4-app Feature Flag & Runtime Configuration Platform decoupling code deployment from feature release.',
+      stack: 'Linux (Systemd / Journalctl) · Terraform · AWS & Azure · Docker Compose · PostgreSQL · GitHub Actions & Self-Hosted Gitea · Bash & PowerShell'
+    };
+
+    // --- FALLBACK LOG ENTRY (WHEN RUNNING FROM FILE:// BEFORE FETCHING ./logs/ OR GITHUB API) ---
+    const INITIAL_LOGS = [
+      {
+        id: 'log-git-cli-workflow',
+        title: 'Managing Layer Zero Logs & Roadmap Progress via Git CLI',
+        date: '2026-10-20',
+        tags: ['git', 'github', 'gitea', 'layer-zero', 'flaggo'],
+        source: 'logs/2026-10-20-git-cli-workflow.md',
+        summary: 'How Layer Zero loads Markdown log entries from logs/*.md and roadmap/Operation Flaggo state from state.json committed directly via Git CLI.',
+        content: `Layer Zero is strictly read-only on the web. Every visitor sees the exact canonical state committed to the Git repository—no browser localStorage overrides or exposed editing forms.\n\n1. Publishing a New Log Entry (logs/*.md):\nCreate a Markdown file inside the "logs/" folder of your repository with YAML frontmatter (title, date, tags, summary) and push via git CLI. Layer Zero automatically discovers and renders all .md files inside logs/.\n\n2. Updating Operation Flaggo & Roadmap Progress (state.json):\nOpen "state.json" in your editor, set any task ID (e.g. "fm1_1", "w0_1") or gate ID ("fg_m1", "g0") to "pending", "ai_assisted", or "independent", and run:\ngit add state.json && git commit -m "chore(roadmap): update progress" && git push`
+      }
+    ];
+
+    // --- 12-WEEK DEVOPS ROADMAP (RICARDO GIRO / FLAGGO EDITION — NO PRAGUE/CZECH REFERENCES) ---
+    const ROADMAP_DATA = [
+      {
+        id: 'w0',
+        title: 'Week 0: Baseline & Public Launch',
+        focus: 'Measure learning velocity, establish public source of truth, and scope Operation Flaggo.',
+        tasks: [
+          { id: 'w0_1', text: 'Confirm weekly study/lab workload and target role requirements' },
+          { id: 'w0_2', text: 'Clean GitHub profile (github.com/xarop-pa-toss) and self-hosted Gitea; pin best existing work' },
+          { id: 'w0_3', text: 'Create public reinvention README & Flaggo 4-app architecture overview' },
+          { id: 'w0_4', text: 'Join cloud infrastructure & DevOps technical communities (Meetup, Discord)' },
+          { id: 'w0_5', text: 'Apply to 15-20 current infrastructure roles (Cohort A)' }
+        ],
+        gate: { id: 'g0', name: 'Calibrate & Launch', criteria: 'One canonical profile another engineer can understand in <3 minutes.' }
+      },
+      {
+        id: 'w1_2',
+        title: 'Weeks 1-2: Linux, Git & Scripting (Flaggo Milestone 1)',
+        focus: 'Live in Linux. Systemd, journalctl, permissions, SSH, networking, processes. Git on every artifact.',
+        tasks: [
+          { id: 'w1_1', text: 'Publish linux-incident-lab v0.1 & complete Flaggo Milestone 1 local Docker Compose stack' },
+          { id: 'w1_2', text: 'Document evidence trail and INCIDENTS.md postmortem (no screenshot-only repos)' },
+          { id: 'w1_3', text: 'Post narrow technical question/review request (r/sysadmin, Discord)' },
+          { id: 'w1_4', text: 'Make one useful outward contribution (reproduce issue/docs)' },
+          { id: 'w1_5', text: 'Contact 5 relevant practitioners/recruiters' }
+        ],
+        gate: { id: 'g1', name: 'Linux/Git Gate', criteria: 'Pass unseen Linux incident test: receive external correction, respond with fix/explanation.' }
+      },
+      {
+        id: 'w3_4',
+        title: 'Weeks 3-4: Cloud & Network Translation',
+        focus: 'Translate AD/networking knowledge to VPC/VNet, Subnets, Security Groups/NSGs, DNS, and IAM/Entra RBAC.',
+        tasks: [
+          { id: 'w3_1', text: 'Build cloud network environment for Flaggo (public ALB + private DB subnets) and publish architecture notes' },
+          { id: 'w3_2', text: 'Run public review: ask one narrowly framed cloud/networking question after attempt' },
+          { id: 'w3_3', text: 'Begin bridge-role cohort applications (Cohort B)' },
+          { id: 'w3_4', text: 'Run one lateral micro-experiment (IAM/Entra ID or Ansible)' }
+        ],
+        gate: { id: 'g2', name: 'Cloud Translation Gate', criteria: 'Explain and repair a broken dependency; Flaggo project is reproducible by another person.' }
+      },
+      {
+        id: 'w5_6',
+        title: 'Weeks 5-6: Terraform & Lateral Probes (Flaggo Milestone 2)',
+        focus: 'Move Flaggo infrastructure to Terraform (VPC, 2 AZs, EC2, ALB, Private RDS, S3 State); destroy/rebuild.',
+        tasks: [
+          { id: 'w5_1', text: 'Publish flaggo-terraform-foundation (VPC/EC2/ALB/Private RDS PostgreSQL + Bonus Azure portability spec)' },
+          { id: 'w5_2', text: 'Ensure variables/outputs used, S3 state locking enabled, no secrets, verified teardown instructions included' },
+          { id: 'w5_3', text: 'Run identity/Graph probe OR infrastructure-automation probe' },
+          { id: 'w5_4', text: 'Choose specialization branch based on transfer speed + interest + market pull' }
+        ],
+        gate: { id: 'g3', name: 'Branch Gate', criteria: 'Recreate Flaggo infra from repo and explicitly choose branch (CloudOps, IAM, or DevOps).' }
+      },
+      {
+        id: 'w7_8',
+        title: 'Weeks 7-8: Docker, CI/CD & Contribution (Flaggo Milestones 3 & 4)',
+        focus: 'Containerize Flaggo 4-app platform; test/build/deploy/verify with GitHub Actions & Bash/PowerShell scripts.',
+        tasks: [
+          { id: 'w7_1', text: 'Publish flaggo-service-delivery (4-app Docker Compose, GitHub/Gitea Actions CI, Terraform validation)' },
+          { id: 'w7_2', text: 'Include /health/live & /health/ready probes, flag rollout/kill-switch tests, Bash + PowerShell diagnostic scripts' },
+          { id: 'w7_3', text: 'Submit at least one useful issue/PR to a tool used in the lab' },
+          { id: 'w7_4', text: 'Expand rebranded application cohorts if gates passed' }
+        ],
+        gate: { id: 'g4', name: 'Clean-Environment Gate', criteria: 'Clean-machine Flaggo deployment plus one broken-pipeline incident repaired independently.' }
+      },
+      {
+        id: 'w9_10',
+        title: 'Weeks 9-10: Observability & Public Operations (Flaggo Milestone 5)',
+        focus: 'Metrics/logs/alerts, RUNBOOK.md, COSTS.md, failure injection and 3+ INCIDENTS.md postmortems.',
+        tasks: [
+          { id: 'w9_1', text: 'Add Flaggo observability lab (Metrics/logs/alerts, RUNBOOK.md, COSTS.md)' },
+          { id: 'w9_2', text: 'Resolve Milestone 5 incident tickets (Networking, Dependency, App Correctness) and write INCIDENTS.md' },
+          { id: 'w9_3', text: "Answer other people's technical questions where qualified" },
+          { id: 'w9_4', text: 'Build technical practitioner network (follow community organizers/engineers)' }
+        ],
+        gate: { id: 'g5', name: 'Observability Gate', criteria: 'Diagnose from telemetry and demonstrate reciprocal community participation.' }
+      },
+      {
+        id: 'w11_12',
+        title: 'Weeks 11-12: Specialization & Market Conversion',
+        focus: 'Deepen chosen branch; Operation Flaggo capstone walkthrough; mock incidents; rewrite positioning.',
+        tasks: [
+          { id: 'w11_1', text: 'Integrate Flaggo capstone: Terraform IaC + 4-App Feature Flag Delivery + Identity + Teardown' },
+          { id: 'w11_2', text: 'Publish a public Flaggo walkthrough showing complete flow from ALB to PostgreSQL and back' },
+          { id: 'w11_3', text: 'Rewrite Resume/LinkedIn around the new truthful engineering identity' },
+          { id: 'w11_4', text: 'Targeted engineering outreach; compare conversion by cohort' }
+        ],
+        gate: { id: 'g6', name: 'Market Gate', criteria: 'Technical + market gate pass: Flaggo project survives scrutiny, applications generate broader conversations.' }
+      }
+    ];
+
+    // --- OPERATION FLAGGO ASSESSMENT SPECIFICATION ---
+    const FLAGGO_MILESTONES = [
+      {
+        id: 'm1',
+        title: 'Milestone 1 — Make Flaggo Work Locally',
+        subtitle: 'Using Linux and Docker Compose across the 4-app Flaggo topology:',
+        tasks: [
+          { id: 'fm1_1', text: 'Start the Flaggo 4-app stack: Control Plane Frontend, Control Plane Backend Web API, Data Plane client/evaluator, and local PostgreSQL database.' },
+          { id: 'fm1_2', text: 'Ensure that only the Flaggo Frontend/API gateway needs a host-published port; internal Data Plane worker and database services stay private.' },
+          { id: 'fm1_3', text: 'Demonstrate working feature flag creation, rollout percentage updates, kill-switch toggles, and Data Plane evaluation requests.' },
+          { id: 'fm1_4', text: 'Establish health checks, persistent database volumes, container restart policies, and useful logs.' },
+          { id: 'fm1_5', text: 'Resolve any scaffold dependency or service-discovery problems; use Git branches and meaningful commits.' }
+        ],
+        gateId: 'fg_m1',
+        acceptance: 'All Flaggo services respond, the API passes its local integration tests, and Docker Compose can recreate the system from documented instructions.'
+      },
+      {
+        id: 'm2',
+        title: 'Milestone 2 — Provision AWS Infrastructure',
+        subtitle: 'Use Terraform to provision the Flaggo cloud environment:',
+        tasks: [
+          { id: 'fm2_1', text: 'One VPC, two Availability Zones, public and private subnets, routing, and least-privilege Security Groups.' },
+          { id: 'fm2_2', text: 'One CPU-only Linux EC2 instance and one Application Load Balancer (ALB) with a functioning target group and health checks.' },
+          { id: 'fm2_3', text: 'One private, Single-AZ RDS PostgreSQL instance with a subnet group spanning two AZs (RDS must not be publicly accessible).' },
+          { id: 'fm2_4', text: 'IAM permissions for instance management and restricted secret access; S3-backed Terraform state with versioning and locking.' },
+          { id: 'fm2_5', text: 'Restrict Flaggo API access through the ALB only from a designated test IP range; prohibit direct internet access to internal services.' }
+        ],
+        gateId: 'fg_m2',
+        acceptance: 'Terraform can provision the stack reproducibly, the load balancer reports a healthy target, and the EC2 Flaggo application can reach RDS securely.'
+      },
+      {
+        id: 'm3',
+        title: 'Milestone 3 — Make Feature Flag Control & Data Plane Operational',
+        subtitle: 'Use the supplied collection of 30–50 synthetic feature flag rules and runtime configurations:',
+        tasks: [
+          { id: 'fm3_1', text: 'POST /flags — insert and update feature flag rules with keys, environment names, rollout percentages, kill-switch state, and targeting metadata.' },
+          { id: 'fm3_2', text: 'POST /evaluate — evaluate feature flag rules dynamically in memory for a given user/context, respecting percentage rollouts and instant kill switches with zero restarts.' },
+          { id: 'fm3_3', text: 'GET /health/live (application liveness) and GET /health/ready (PostgreSQL database and Data Plane sync readiness).' },
+          { id: 'fm3_4', text: 'Include at least two environments/projects, ensuring flag evaluations never leak or return rules from an unrelated environment.' }
+        ],
+        gateId: 'fg_m3',
+        acceptance: 'Rule creation, in-memory dynamic evaluation, percentage rollout bucketing, kill switches, persistence across container restarts, and environment isolation all work.'
+      },
+      {
+        id: 'm4',
+        title: 'Milestone 4 — Establish a Delivery Pipeline',
+        subtitle: 'Implement GitHub Actions (and Gitea CI mirror) + operational diagnostic scripts:',
+        tasks: [
+          { id: 'fm4_1', text: 'Run application tests, dependency checks, and validate Terraform formatting and configuration.' },
+          { id: 'fm4_2', text: 'Build versioned Flaggo Docker images and publish to a container registry (automated AWS deploy via OIDC is an extension).' },
+          { id: 'fm4_3', text: 'Support a documented deployment and zero-downtime rollback process.' },
+          { id: 'fm4_4', text: 'Produce two operational scripts (one in Bash, one in PowerShell) collecting service status, HTTP health results, and a timestamped diagnostic report.' }
+        ],
+        gateId: 'fg_m4',
+        acceptance: 'A second engineer can deploy a tested Flaggo revision without manually reconstructing the original environment.'
+      },
+      {
+        id: 'm5',
+        title: 'Milestone 5 — Operate and Recover the System',
+        subtitle: 'Investigate and recover from at least three incident tickets after first deployment:',
+        tasks: [
+          { id: 'fm5_1', text: 'Incident 1 (Networking): Record symptom/component, form testable hypothesis, gather evidence, apply smallest defensible fix, verify recovery & prevention.' },
+          { id: 'fm5_2', text: 'Incident 2 (Dependencies / Service Discovery): Record symptom, test hypothesis with evidence, apply minimal fix, and document prevention.' },
+          { id: 'fm5_3', text: 'Incident 3 (Application Correctness — environment isolation or rollout percentage bucketing): Diagnose logic fault, fix, and verify recovery.' },
+          { id: 'fm5_4', text: 'Bonus — Azure Portability: Short Azure equivalent (VNet, NSGs, Azure VMs, App Gateway, Azure DB for PostgreSQL Flexible Server, Managed Identities, Key Vault).' }
+        ],
+        gateId: 'fg_m5',
+        acceptance: 'Demonstrate the recovery, not just the final working system, and complete a verified teardown removing billable AWS resources.'
+      }
+    ];
+
+    const FLAGGO_DELIVERABLES = [
+      { id: 'del_1', name: 'Git Repository', desc: 'Application changes, Terraform, 4-app Docker configuration, tests, and automation.' },
+      { id: 'del_2', name: 'Architecture Diagram', desc: 'Subnets, routing, ports, Security Groups, and Flaggo 4-app service dependencies.' },
+      { id: 'del_3', name: 'README.md', desc: 'Reproducible deployment path from clean checkout.' },
+      { id: 'del_4', name: 'RUNBOOK.md', desc: 'Monitoring, troubleshooting, restart, flag kill-switch rollback, and verified teardown.' },
+      { id: 'del_5', name: 'INCIDENTS.md', desc: 'Timestamped investigations, hypotheses, relevant commands, raw evidence, and fixes.' },
+      { id: 'del_6', name: 'COSTS.md', desc: 'Expected and observed AWS costs, including resources that continue billing when idle.' },
+      { id: 'del_7', name: 'Walkthrough Recording', desc: 'Short screen recording or live walkthrough showing complete query from ALB to PostgreSQL and back.' },
+      { id: 'del_8', name: 'Bonus: Azure Portability', desc: 'Comparison of reusable vs provider-specific Terraform abstractions (networking, identity, health checks, secrets, cost).' }
+    ];
+
+    const ASSESSMENTS = [
+      { id: 'linux', name: 'Linux Operations' },
+      { id: 'git', name: 'Git & Version Control' },
+      { id: 'scripting', name: 'Bash / PowerShell' },
+      { id: 'azure', name: 'Azure Foundations' },
+      { id: 'networking', name: 'Cloud Networking' },
+      { id: 'terraform', name: 'Terraform / IaC' },
+      { id: 'docker', name: 'Docker / Containers' },
+      { id: 'cicd', name: 'CI/CD Pipelines' },
+      { id: 'observability', name: 'Observability & Monitoring' }
+    ];
+
+    const COMPETENCY_EVIDENCE = [
+      { id: 'linux', provider: 'other',
+        project_evidence: { value: true, ref: 'scripts/*.sh', note: 'Shell automation present in the project.' },
+        ai_assisted: { value: true, note: 'LIKELY — core implementation; circumstantial basis only.' },
+        independent: { value: false, note: 'NOT DEMONSTRATED — no second party has followed the runbook.' } },
+      { id: 'git', provider: 'other',
+        project_evidence: { value: true, ref: 'Git history on every artefact', note: 'Git used across project artefacts.' },
+        ai_assisted: { value: true, note: 'LIKELY — core implementation; circumstantial basis only.' },
+        independent: { value: false, note: 'NOT DEMONSTRATED — no second party has followed the runbook.' } },
+      { id: 'scripting', provider: 'other',
+        project_evidence: { value: true, ref: 'scripts/*.sh & *.ps1', note: 'Bash/PowerShell scripts present in the project.' },
+        ai_assisted: { value: true, note: 'LIKELY — core implementation; circumstantial basis only.' },
+        independent: { value: false, note: 'NOT DEMONSTRATED — no second party has followed the runbook.' } },
+      { id: 'azure', provider: 'azure',
+        project_evidence: { value: false, ref: 'none — AWS artefacts do not automatically satisfy Azure', note: 'Targeted via Operation Flaggo Bonus Azure Portability spec.' },
+        ai_assisted: { value: false, note: 'NOT FOUND — no evidence of AI-assisted execution for this competency.' },
+        independent: { value: false, note: 'NOT DEMONSTRATED — no second party has followed the runbook.' } },
+      { id: 'networking', provider: 'aws',
+        project_evidence: { value: true, ref: 'infra/*.tf', note: 'Network topology defined in Terraform (AWS-scoped artefacts).' },
+        ai_assisted: { value: true, note: 'LIKELY — core implementation; circumstantial basis only.' },
+        independent: { value: false, note: 'NOT DEMONSTRATED — no second party has followed the runbook.' } },
+      { id: 'terraform', provider: 'aws',
+        project_evidence: { value: true, ref: 'infra/*.tf', note: 'Terraform IaC artefacts present in the project.' },
+        ai_assisted: { value: true, note: 'LIKELY — core implementation; circumstantial basis only.' },
+        independent: { value: false, note: 'NOT DEMONSTRATED — no second party has followed the runbook.' } },
+      { id: 'docker', provider: 'other',
+        project_evidence: { value: true, ref: 'Dockerfile / container artefacts', note: 'Container build artefacts present for Flaggo 4-app stack.' },
+        ai_assisted: { value: true, note: 'LIKELY — core implementation; circumstantial basis only.' },
+        independent: { value: false, note: 'NOT DEMONSTRATED — no second party has followed the runbook.' } },
+      { id: 'cicd', provider: 'other',
+        project_evidence: { value: true, ref: '.github/workflows/*', note: 'CI/CD workflow files present in the project.' },
+        ai_assisted: { value: true, note: 'LIKELY — core implementation; circumstantial basis only.' },
+        independent: { value: false, note: 'NOT DEMONSTRATED — no second party has followed the runbook.' } },
+      { id: 'observability', provider: 'other',
+        project_evidence: { value: true, ref: 'health probes, log rotation, DB log export', note: 'Instrumentation exists (health probes, log rotation, DB log export).' },
+        ai_assisted: { value: true, note: 'LIKELY — core implementation; circumstantial basis only.' },
+        independent: { value: false, note: 'NOT DEMONSTRATED — no second party has followed the runbook.' } }
+    ];
+
+    const T_GATES = [
+      { id: 't0', name: 'T0 Baseline', desc: 'Separates prior knowledge from learning speed.' },
+      { id: 't1', name: 'T1 First Solution', desc: 'Time to functional solution & hints required.' },
+      { id: 't2', name: 'T2 Transfer', desc: 'Structurally similar but non-identical task.' },
+      { id: 't3', name: 'T3 Adversarial', desc: 'Inject edge case or misleading symptom.' },
+      { id: 't4', name: 'T4 Explanation', desc: 'Written postmortem (hypothesis, fix, prevention).' }
+    ];
+
+    const BRANCHES = [
+      {
+        id: 'A',
+        name: 'Path A: Cloud Infrastructure / CloudOps',
+        type: 'Default',
+        target: 'Infrastructure & Cloud Operations / Junior Cloud Infrastructure Engineer',
+        core: 'Linux, Azure/AWS, networking, Terraform, Git, Bash/PowerShell, Docker, CI/CD, monitoring.',
+        reason: 'Maximizes transfer from Windows Server, AD, Fortinet, Veeam.'
+      },
+      {
+        id: 'B',
+        name: 'Path B: Cloud Identity / IAM Automation',
+        type: 'High-leverage lateral',
+        target: 'Junior Identity & Access Engineer / Cloud Identity Engineer',
+        core: 'Entra ID, M365, RBAC, MFA/CA, PowerShell, Microsoft Graph, OAuth/OIDC/SAML/SCIM.',
+        reason: 'Deepens existing identity and access work instead of learning an unrelated discipline.'
+      },
+      {
+        id: 'C',
+        name: 'Path C: DevOps / Platform',
+        type: 'Higher ceiling (Conditional)',
+        target: 'Junior DevOps / Platform Operations (Only if core mastered quickly)',
+        core: 'Stronger Python/Go, Docker 4-app Flaggo delivery, CI/CD, Terraform, Kubernetes basics, application lifecycle.',
+        reason: 'Requires most software-delivery depth. Easiest place to overclaim.'
+      }
+    ];
+
+    const PORTFOLIO_PROJECTS = [
+      { id: 'p1', name: 'linux-incident-lab', proof: 'Linux ops + troubleshooting' },
+      { id: 'p2', name: 'flaggo-terraform-foundation', proof: 'Cloud + networking + IaC' },
+      { id: 'p3', name: 'flaggo-service-delivery', proof: 'Docker 4-App + CI/CD' },
+      { id: 'p4', name: 'flaggo-observability-lab', proof: 'Branch Specialization & Telemetry' }
+    ];
+
+    const SIGNALS = [
+      { id: 's1', name: '1. Source-of-truth', channel: 'GitHub & Gitea (Readme, Code, Notes)' },
+      { id: 's2', name: '2. Peer-review', channel: 'Reddit/Discord/Q&A' },
+      { id: 's3', name: '3. Reciprocal', channel: 'Community replies/PRs' },
+      { id: 's4', name: '4. Professional', channel: 'LinkedIn/Write-up' },
+      { id: 's5', name: '5. Network', channel: 'Direct outreach' },
+      { id: 's6', name: '6. Market', channel: 'Targeted application' }
+    ];
+
+    const COHORTS = [
+      { id: 'c_A', name: 'A: Current Infrastructure', titles: 'Infra Support, Jr Sysadmin, M365/Entra Support', target: 20 },
+      { id: 'c_B', name: 'B: Systems/Cloud Bridge', titles: 'Assoc Systems Eng, Cloud Support, Jr CloudOps', target: 20 },
+      { id: 'c_C', name: 'C: IAM/Identity', titles: 'Jr IAM Eng, Identity Ops (Run when Graph/Entra real)', target: 15 },
+      { id: 'c_D', name: 'D: Jr DevOps Stretch', titles: 'Jr DevOps (Only after Flaggo delivery/IaC gates pass)', target: 10 }
+    ];
+
+    // --- MARKDOWN FRONTMATTER PARSER FOR REAL GIT REPO POSTS ---
+    function parseMarkdownWithFrontmatter(rawText, fallbackName) {
+      const trimmed = String(rawText || '').trim();
+      const result = {
+        title: String(fallbackName || 'Untitled Log').replace(/\.(md|txt)$/i, '').replace(/[-_]/g, ' '),
+        date: new Date().toISOString().split('T')[0],
+        tags: ['log'],
+        summary: '',
+        content: trimmed
+      };
+
+      if (trimmed.startsWith('---')) {
+        const endIdx = trimmed.indexOf('\n---', 3);
+        if (endIdx !== -1) {
+          const fmBlock = trimmed.slice(3, endIdx).trim();
+          const body = trimmed.slice(endIdx + 4).trim();
+          result.content = body;
+          fmBlock.split('\n').forEach(line => {
+            const colon = line.indexOf(':');
+            if (colon > 0) {
+              const key = line.slice(0, colon).trim().toLowerCase();
+              const val = line.slice(colon + 1).trim().replace(/^["']|["']$/g, '');
+              if (key === 'title' && val) result.title = val;
+              if (key === 'date' && val) result.date = val;
+              if (key === 'summary' && val) result.summary = val;
+              if (key === 'tags' && val) {
+                const cleaned = val.replace(/^\[|\]$/g, '');
+                result.tags = cleaned.split(',').map(t => t.trim().toLowerCase()).filter(Boolean);
+              }
+            }
+          });
+        }
+      }
+
+      if (!result.summary) {
+        const firstPara = result.content.split('\n\n').find(p => p.trim() && !p.trim().startsWith('#')) || result.content;
+        result.summary = firstPara.replace(/[#*`]/g, '').trim().slice(0, 180);
+      }
+      return result;
+    }
+
+    function buildMarkdownFileContent(post) {
+      return `---\ntitle: "${post.title.replace(/"/g, '\\"')}"\ndate: "${post.date}"\ntags: [${(post.tags || []).join(', ')}]\nsummary: "${post.summary.replace(/"/g, '\\"')}"\n---\n\n${post.content}\n`;
+    }
+
+    // --- UI COMPONENTS ---
+    function StatusBadge({ status }) {
+      if (status === STATUS.INDEPENDENT) {
+        return h('span', {
+          className: 'font-mono',
+          style: {
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '6px',
+            padding: '4px 10px',
+            fontSize: '11px',
+            backgroundColor: '#2A7886',
+            color: '#FFFFFF',
+            border: '1.5px solid #512B58',
+            boxShadow: '2px 2px 0px rgba(81, 43, 88, 0.22)',
+            fontWeight: 600,
+            whiteSpace: 'nowrap',
+            flexShrink: 0
+          }
+        },
+          h('span', { style: { width: '7px', height: '7px', backgroundColor: '#79BAC1', border: '1px solid #FFFFFF', display: 'inline-block' } }),
+          'INDEPENDENT'
+        );
+      }
+      if (status === STATUS.AI_ASSISTED) {
+        return h('span', {
+          className: 'font-mono',
+          style: {
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '6px',
+            padding: '4px 10px',
+            fontSize: '11px',
+            backgroundColor: '#512B58',
+            color: '#FFFFFF',
+            border: '1.5px solid #231926',
+            boxShadow: '2px 2px 0px rgba(42, 120, 134, 0.35)',
+            fontWeight: 600,
+            whiteSpace: 'nowrap',
+            flexShrink: 0
+          }
+        },
+          h('span', { style: { width: '7px', height: '7px', backgroundColor: '#79BAC1', border: '1px solid #FFFFFF', display: 'inline-block' } }),
+          'AI ASSISTED'
+        );
+      }
+      return h('span', {
+        className: 'font-mono',
+        style: {
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '6px',
+          padding: '4px 10px',
+          fontSize: '11px',
+          backgroundColor: '#FFFFFF',
+          color: '#4E5D63',
+          border: '1.5px solid #79BAC1',
+          fontWeight: 600,
+          whiteSpace: 'nowrap',
+          flexShrink: 0
+        }
+      },
+        h('span', { style: { width: '7px', height: '7px', backgroundColor: '#F1F3F4', border: '1.5px solid #2A7886', display: 'inline-block' } }),
+        'PENDING'
+      );
+    }
+
+    function getTaskRowStyle(status) {
+      if (status === STATUS.INDEPENDENT) {
+        return {
+          padding: '0.95rem 1.15rem',
+          display: 'flex',
+          flexWrap: 'wrap',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '1rem',
+          backgroundColor: 'rgba(121, 186, 193, 0.24)',
+          border: '1px solid #2A7886',
+          borderLeft: '6px solid #2A7886'
+        };
+      }
+      if (status === STATUS.AI_ASSISTED) {
+        return {
+          padding: '0.95rem 1.15rem',
+          display: 'flex',
+          flexWrap: 'wrap',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '1rem',
+          backgroundColor: 'rgba(81, 43, 88, 0.08)',
+          border: '1px solid #512B58',
+          borderLeft: '6px solid #512B58'
+        };
+      }
+      return {
+        padding: '0.95rem 1.15rem',
+        display: 'flex',
+        flexWrap: 'wrap',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: '1rem',
+        backgroundColor: '#F1F3F4',
+        border: '1px solid rgba(42, 120, 134, 0.4)',
+        borderLeft: '6px solid #79BAC1'
+      };
+    }
+
+    // Read-only 3-pill status indicator (Controlled strictly via state.json in Git)
+    function StatusIndicator({ status }) {
+      const current = status || STATUS.PENDING;
+      return h('div', {
+        ariaLabel: `Status: ${current}`,
+        style: {
+          display: 'inline-flex',
+          gap: '5px',
+          background: '#FFFFFF',
+          padding: '4px',
+          border: '1.5px solid #2A7886',
+          boxShadow: '2px 2px 0px rgba(81, 43, 88, 0.12)'
+        }
+      },
+        h('span', {
+          className: 'font-mono',
+          style: {
+            padding: '5px 11px',
+            fontSize: '11.5px',
+            backgroundColor: current === STATUS.PENDING ? '#F1F3F4' : 'transparent',
+            color: current === STATUS.PENDING ? '#231926' : '#4E5D63',
+            border: current === STATUS.PENDING ? '1.5px solid #512B58' : '1.5px solid transparent',
+            fontWeight: current === STATUS.PENDING ? 600 : 400
+          }
+        }, current === STATUS.PENDING ? '● Pending' : 'Pending'),
+        h('span', {
+          className: 'font-mono',
+          style: {
+            padding: '5px 11px',
+            fontSize: '11.5px',
+            backgroundColor: current === STATUS.AI_ASSISTED ? '#512B58' : 'rgba(81, 43, 88, 0.76)',
+            color: '#FFFFFF',
+            border: current === STATUS.AI_ASSISTED ? '1.5px solid #231926' : '1.5px solid #512B58',
+            boxShadow: current === STATUS.AI_ASSISTED ? '2px 2px 0px #79BAC1' : 'none',
+            fontWeight: current === STATUS.AI_ASSISTED ? 700 : 500
+          }
+        }, current === STATUS.AI_ASSISTED ? '● AI Assisted' : 'AI Assisted'),
+        h('span', {
+          className: 'font-mono',
+          style: {
+            padding: '5px 11px',
+            fontSize: '11.5px',
+            backgroundColor: current === STATUS.INDEPENDENT ? '#2A7886' : 'rgba(121, 186, 193, 0.25)',
+            color: current === STATUS.INDEPENDENT ? '#FFFFFF' : '#2A7886',
+            border: current === STATUS.INDEPENDENT ? '1.5px solid #512B58' : '1.5px solid rgba(42, 120, 134, 0.45)',
+            boxShadow: current === STATUS.INDEPENDENT ? '2px 2px 0px rgba(81, 43, 88, 0.25)' : 'none',
+            fontWeight: current === STATUS.INDEPENDENT ? 700 : 500
+          }
+        }, current === STATUS.INDEPENDENT ? '● Independent' : 'Independent')
+      );
+    }
+
+    function App() {
+      const [mainSection, setMainSection] = useState('logs');
+      const [roadmapSubTab, setRoadmapSubTab] = useState('dashboard');
+      const [bioOpen, setBioOpen] = useState(false);
+
+      // Canonical Read-Only State (Loaded from ./state.json committed via Git CLI)
+      const [bio, setBio] = useState(DEFAULT_BIO);
+      const [posts, setPosts] = useState(INITIAL_LOGS);
+      const [tasks, setTasks] = useState({});
+      const [gates, setGates] = useState({});
+      const [opTasks, setOpTasks] = useState({});
+      const [opGates, setOpGates] = useState({});
+      const [deliverables, setDeliverables] = useState({});
+      const [assessments, setAssessments] = useState(() => {
+        const defaults = {};
+        ['terraform', 'docker', 'cicd', 'scripting', 'linux'].forEach(skill => {
+          defaults[`${skill}_t0`] = STATUS.INDEPENDENT;
+          defaults[`${skill}_t1`] = STATUS.AI_ASSISTED;
+        });
+        return defaults;
+      });
+      const [branch, setBranch] = useState(null);
+      const [portfolio, setPortfolio] = useState({});
+      const [applications, setApplications] = useState(() => {
+        const defaults = {};
+        COHORTS.forEach(c => { defaults[c.id] = { applied: 0, screens: 0, tech: 0 }; });
+        return defaults;
+      });
+
+      // Live GitHub & Gitea Data
+      const [githubCommits, setGithubCommits] = useState([]);
+      const [giteaCommits, setGiteaCommits] = useState([]);
+      const [githubRepos, setGithubRepos] = useState([]);
+      const [gitSyncStatus, setGitSyncStatus] = useState('');
+      const [repoLogsStatus, setRepoLogsStatus] = useState('');
+
+      // Read-Only Logs Filter & Reader State
+      const [selectedTag, setSelectedTag] = useState('all');
+      const [searchQuery, setSearchQuery] = useState('');
+      const [readingPost, setReadingPost] = useState(null);
+
+      // 1. Load canonical state.json committed to the repository
+      async function loadCanonicalStateJson() {
+        try {
+          const res = await fetch('./state.json', { cache: 'no-store' });
+          if (res.ok) {
+            const data = await res.json();
+            if (data.bio) setBio(prev => ({ ...prev, ...data.bio }));
+            if (data.tasks) setTasks(data.tasks);
+            if (data.gates) setGates(data.gates);
+            if (data.opTasks) setOpTasks(data.opTasks);
+            if (data.opGates) setOpGates(data.opGates);
+            if (data.deliverables) setDeliverables(data.deliverables);
+            if (data.assessments) setAssessments(data.assessments);
+            if (data.branch !== undefined) setBranch(data.branch);
+            if (data.portfolio) setPortfolio(data.portfolio);
+            if (data.applications) setApplications(data.applications);
+          }
+        } catch (e) {
+          // Uses built-in defaults if opened directly via file://
+        }
+      }
+
+      // 2. Load real Markdown logs from ./logs/index.json AND GitHub Contents API
+      async function loadLogsFromGit(currentBio) {
+        const activeBio = currentBio || bio;
+        const loadedPosts = [];
+        const seenIds = new Set();
+
+        // Step A: Load local repo Markdown files listed in ./logs/index.json
+        try {
+          const idxRes = await fetch('./logs/index.json', { cache: 'no-store' });
+          if (idxRes.ok) {
+            const fileList = await idxRes.json();
+            if (Array.isArray(fileList)) {
+              for (const fileName of fileList) {
+                try {
+                  const mdRes = await fetch(`./logs/${fileName}`, { cache: 'no-store' });
+                  if (mdRes.ok) {
+                    const rawText = await mdRes.text();
+                    const parsed = parseMarkdownWithFrontmatter(rawText, fileName);
+                    const id = `repo-md-${fileName}`;
+                    seenIds.add(fileName);
+                    loadedPosts.push({
+                      id,
+                      title: parsed.title,
+                      date: parsed.date,
+                      tags: parsed.tags,
+                      source: `logs/${fileName}`,
+                      summary: parsed.summary,
+                      content: parsed.content
+                    });
+                  }
+                } catch (e) {}
+              }
+            }
+          }
+        } catch (e) {}
+
+        // Step B: Also check GitHub Contents API for any .md files pushed to logsRepo/logsPath
+        const repoSlug = (activeBio.logsRepo || '').trim();
+        const folderPath = (activeBio.logsPath || 'logs').trim().replace(/^\/+|\/+$/g, '');
+        if (repoSlug && repoSlug.includes('/')) {
+          try {
+            const url = `https://api.github.com/repos/${repoSlug}/contents/${folderPath}`;
+            const res = await fetch(url, { headers: { 'Accept': 'application/vnd.github.v3+json' } });
+            if (res.ok) {
+              const items = await res.json();
+              if (Array.isArray(items)) {
+                const mdFiles = items.filter(f => f.type === 'file' && /\.(md|markdown|txt)$/i.test(f.name));
+                for (const fileItem of mdFiles.slice(0, 25)) {
+                  if (!seenIds.has(fileItem.name) && fileItem.download_url) {
+                    const rawRes = await fetch(fileItem.download_url);
+                    if (rawRes.ok) {
+                      const rawText = await rawRes.text();
+                      const parsed = parseMarkdownWithFrontmatter(rawText, fileItem.name);
+                      seenIds.add(fileItem.name);
+                      loadedPosts.push({
+                        id: 'gh-md-' + fileItem.sha,
+                        title: parsed.title,
+                        date: parsed.date,
+                        tags: parsed.tags,
+                        source: `${repoSlug}/${fileItem.path}`,
+                        summary: parsed.summary,
+                        content: parsed.content
+                      });
+                    }
+                  }
+                }
+              }
+            }
+          } catch (e) {}
+        }
+
+        if (loadedPosts.length > 0) {
+          loadedPosts.sort((a, b) => String(b.date).localeCompare(String(a.date)));
+          setPosts(loadedPosts);
+          setRepoLogsStatus(`Synced ${loadedPosts.length} Markdown log(s) from Git.`);
+        }
+      }
+
+      // 3. Fetch real GitHub activity & repositories for xarop-pa-toss
+      async function fetchLiveGitActivity() {
+        const user = (bio.githubUser || 'xarop-pa-toss').trim();
+        setGitSyncStatus('Syncing live GitHub data...');
+        try {
+          const [eventsRes, reposRes] = await Promise.all([
+            fetch(`https://api.github.com/users/${encodeURIComponent(user)}/events/public?per_page=30`),
+            fetch(`https://api.github.com/users/${encodeURIComponent(user)}/repos?sort=updated&per_page=12`)
+          ]);
+
+          if (reposRes.ok) {
+            const reposData = await reposRes.json();
+            if (Array.isArray(reposData)) {
+              setGithubRepos(reposData);
+              const repoCommits = [];
+              for (const r of reposData.slice(0, 2)) {
+                try {
+                  const cRes = await fetch(`https://api.github.com/repos/${r.full_name}/commits?per_page=2`);
+                  if (cRes.ok) {
+                    const cList = await cRes.json();
+                    if (Array.isArray(cList)) {
+                      cList.forEach(item => {
+                        repoCommits.push({
+                          id: item.sha,
+                          source: 'GitHub',
+                          repo: r.full_name,
+                          branch: r.default_branch || 'main',
+                          hash: String(item.sha || '').slice(0, 7),
+                          message: item.commit && item.commit.message ? item.commit.message.split('\n')[0] : 'commit',
+                          date: item.commit && item.commit.author && item.commit.author.date ? item.commit.author.date.split('T')[0] : ''
+                        });
+                      });
+                    }
+                  }
+                } catch (e) {}
+              }
+              if (repoCommits.length > 0) {
+                setGithubCommits(repoCommits);
+                setGitSyncStatus(`Synced ${repoCommits.length} latest commit(s) from github.com/${user}.`);
+              }
+            }
+          }
+
+          if (eventsRes.ok) {
+            const eventsData = await eventsRes.json();
+            const extractedCommits = [];
+            if (Array.isArray(eventsData)) {
+              eventsData.forEach(ev => {
+                if (ev.type === 'PushEvent' && ev.payload && Array.isArray(ev.payload.commits)) {
+                  const branchName = String(ev.payload.ref || 'refs/heads/main').replace('refs/heads/', '');
+                  ev.payload.commits.slice().reverse().forEach(c => {
+                    extractedCommits.push({
+                      id: c.sha,
+                      source: 'GitHub',
+                      repo: ev.repo ? ev.repo.name : user,
+                      branch: branchName,
+                      hash: String(c.sha || '').slice(0, 7),
+                      message: String(c.message || '').split('\n')[0],
+                      date: ev.created_at ? ev.created_at.split('T')[0] : ''
+                    });
+                  });
+                }
+              });
+            }
+            if (extractedCommits.length > 0) {
+              setGithubCommits(extractedCommits.slice(0, 8));
+              setGitSyncStatus(`Synced ${extractedCommits.length} recent commit(s) from GitHub (@${user}).`);
+            }
+          }
+        } catch (err) {
+          setGitSyncStatus('Could not reach api.github.com from this network.');
+        }
+
+        if (bio.giteaBaseUrl && bio.giteaBaseUrl.trim()) {
+          try {
+            const base = bio.giteaBaseUrl.trim().replace(/\/+$/, '');
+            const gUser = (bio.giteaUser || 'xarop_pa_toss').trim();
+            const res = await fetch(`${base}/api/v1/users/${encodeURIComponent(gUser)}/repos?limit=5`);
+            if (res.ok) {
+              const gRepos = await res.json();
+              if (Array.isArray(gRepos) && gRepos.length > 0) {
+                const topRepo = gRepos[0];
+                const cRes = await fetch(`${base}/api/v1/repos/${topRepo.full_name}/commits?limit=3`);
+                if (cRes.ok) {
+                  const cData = await cRes.json();
+                  if (Array.isArray(cData)) {
+                    setGiteaCommits(cData.map(item => ({
+                      id: item.sha,
+                      source: 'Gitea',
+                      repo: topRepo.full_name,
+                      branch: topRepo.default_branch || 'main',
+                      hash: String(item.sha || '').slice(0, 7),
+                      message: item.commit && item.commit.message ? item.commit.message.split('\n')[0] : 'commit',
+                      date: item.created ? item.created.split('T')[0] : ''
+                    })));
+                  }
+                }
+              }
+            }
+          } catch (e) {}
+        }
+      }
+
+      useEffect(() => {
+        loadCanonicalStateJson().then(() => {
+          loadLogsFromGit();
+          fetchLiveGitActivity();
+        });
+      }, []);
+
+      const downloadPostAsMarkdown = (post) => {
+        const md = buildMarkdownFileContent(post);
+        const blob = new Blob([md], { type: 'text/markdown;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const slug = post.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'log';
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${post.date}-${slug}.md`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      };
+
+      // Computed Roadmap & Operation Flaggo Progress
+      const progressStats = useMemo(() => {
+        let totalTasks = 0;
+        let independentTasks = 0;
+        let aiTasks = 0;
+        ROADMAP_DATA.forEach(w => {
+          w.tasks.forEach(t => {
+            totalTasks++;
+            if (tasks[t.id] === STATUS.INDEPENDENT) independentTasks++;
+            if (tasks[t.id] === STATUS.AI_ASSISTED) aiTasks++;
+          });
+        });
+        const totalGates = ROADMAP_DATA.length;
+        const passedGates = ROADMAP_DATA.filter(w => gates[w.gate.id] === STATUS.INDEPENDENT).length;
+
+        let opTotal = 0;
+        let opInd = 0;
+        FLAGGO_MILESTONES.forEach(m => {
+          m.tasks.forEach(t => {
+            opTotal++;
+            if (opTasks[t.id] === STATUS.INDEPENDENT) opInd++;
+          });
+        });
+        const opPassedGates = FLAGGO_MILESTONES.filter(m => opGates[m.gateId] === STATUS.INDEPENDENT).length;
+
+        return {
+          totalTasks,
+          independentTasks,
+          aiTasks,
+          completionPercent: Math.round((independentTasks / totalTasks) * 100) || 0,
+          totalGates,
+          passedGates,
+          opTotal,
+          opInd,
+          opPercent: Math.round((opInd / opTotal) * 100) || 0,
+          opPassedGates,
+          opTotalGates: FLAGGO_MILESTONES.length
+        };
+      }, [tasks, gates, opTasks, opGates]);
+
+      const allTags = useMemo(() => {
+        const s = new Set();
+        posts.forEach(p => (p.tags || []).forEach(t => s.add(t.toLowerCase())));
+        return Array.from(s).sort();
+      }, [posts]);
+
+      const filteredPosts = useMemo(() => {
+        return posts.filter(p => {
+          const tagMatch = selectedTag === 'all' || (p.tags || []).some(t => t.toLowerCase() === selectedTag);
+          if (!tagMatch) return false;
+          if (!searchQuery.trim()) return true;
+          const q = searchQuery.toLowerCase();
+          return (
+            p.title.toLowerCase().includes(q) ||
+            p.summary.toLowerCase().includes(q) ||
+            p.content.toLowerCase().includes(q) ||
+            (p.tags || []).some(t => t.toLowerCase().includes(q))
+          );
+        });
+      }, [posts, selectedTag, searchQuery]);
+
+      // --- SECTION 1: HOME PAGE ("THE LOGS" + WORKSTATION WELCOME — STRICTLY READ-ONLY) ---
+      const renderHomeLogs = () => h('div', { style: { display: 'flex', flexDirection: 'column', gap: '2.75rem' } },
+        // Spacious OS Window Hero
+        h('section', { className: 'os-window' },
+          h('div', { className: 'os-titlebar' },
+            h('span', null, `SYSTEM // LAYER ZERO — ${bio.name.toUpperCase()} (@${bio.handle})`),
+            h('span', null, `GITHUB: ${bio.githubUser}`)
+          ),
+          h('div', { style: { padding: '2.25rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' } },
+            h('div', { style: { maxWidth: '72ch', display: 'flex', flexDirection: 'column', gap: '0.85rem' } },
+              h('h1', {
+                className: 'font-display',
+                style: { fontSize: 'clamp(1.85rem, 3.2vw, 2.6rem)', fontWeight: 700, color: '#512B58', lineHeight: 1.18 }
+              }, 'Ricardo Giro — Infrastructure, DevOps & Engineering Hub'),
+              h('p', { style: { fontSize: '1.02rem', color: '#231926' } }, bio.summary),
+              h('p', { style: { fontSize: '0.95rem', color: '#4E5D63' } },
+                'Active Roadmap Project: ',
+                h('strong', { style: { color: '#512B58' } }, 'Flaggo'),
+                ' — a lightweight, self-hosted 4-app Feature Flag & Runtime Configuration Platform decoupling code deployment from feature release.'
+              )
+            ),
+            h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: '0.85rem', paddingTop: '1.25rem', borderTop: '1px solid rgba(42, 120, 134, 0.3)' } },
+              h('button', {
+                type: 'button',
+                onClick: () => setMainSection('operation'),
+                className: 'os-btn os-btn-primary'
+              }, `Operation Flaggo (${progressStats.opPassedGates}/${progressStats.opTotalGates} Gates)`),
+              h('button', {
+                type: 'button',
+                onClick: () => setMainSection('roadmap'),
+                className: 'os-btn os-btn-teal'
+              }, `DevOps Roadmap (${progressStats.completionPercent}%)`),
+              h('button', {
+                type: 'button',
+                onClick: () => setMainSection('projects'),
+                className: 'os-btn'
+              }, 'Flaggo Architecture & Repos'),
+              h('a', {
+                href: bio.githubUrl,
+                target: '_blank',
+                rel: 'noreferrer',
+                className: 'os-btn'
+              }, 'GitHub (xarop-pa-toss) ->')
+            )
+          )
+        ),
+
+        // THE LOGS SECTION (READ-ONLY FROM GIT)
+        h('section', { style: { display: 'flex', flexDirection: 'column', gap: '1.5rem' } },
+          h('div', { style: { display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'flex-end', gap: '1rem', paddingBottom: '1rem', borderBottom: '2px solid #512B58' } },
+            h('div', null,
+              h('h2', { className: 'font-display', style: { fontSize: '1.75rem', fontWeight: 700, color: '#512B58' } }, 'The Logs'),
+              h('p', { className: 'font-mono', style: { fontSize: '12.5px', color: '#4E5D63', marginTop: '0.2rem' } },
+                `Git-backed Markdown dispatches (${bio.logsPath}/*.md)`
+              )
+            ),
+            h('div', { style: { display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.75rem' } },
+              h('input', {
+                type: 'search',
+                ariaLabel: 'Search The Logs',
+                placeholder: 'Search logs...',
+                value: searchQuery,
+                onChange: e => setSearchQuery(e.target.value),
+                className: 'os-input font-mono',
+                style: { width: '240px', padding: '0.45rem 0.75rem', fontSize: '12.5px' }
+              }),
+              h('button', {
+                type: 'button',
+                onClick: () => loadLogsFromGit(bio),
+                className: 'os-btn'
+              }, 'Refresh from Git')
+            )
+          ),
+
+          // Tag Filter Bar
+          h('div', { className: 'os-panel', style: { padding: '0.65rem', display: 'flex', flexWrap: 'wrap', gap: '0.5rem' } },
+            h('button', {
+              type: 'button',
+              onClick: () => setSelectedTag('all'),
+              className: 'font-mono',
+              style: {
+                padding: '0.4rem 0.85rem',
+                fontSize: '12px',
+                backgroundColor: selectedTag === 'all' ? '#512B58' : 'transparent',
+                color: selectedTag === 'all' ? '#FFFFFF' : '#231926',
+                fontWeight: selectedTag === 'all' ? 600 : 400
+              }
+            }, `All (${posts.length})`),
+            ...allTags.map(tag =>
+              h('button', {
+                key: tag,
+                type: 'button',
+                onClick: () => setSelectedTag(tag),
+                className: 'font-mono',
+                style: {
+                  padding: '0.4rem 0.85rem',
+                  fontSize: '12px',
+                  backgroundColor: selectedTag === tag ? '#2A7886' : 'transparent',
+                  color: selectedTag === tag ? '#FFFFFF' : '#231926',
+                  fontWeight: selectedTag === tag ? 600 : 400
+                }
+              }, `#${tag}`)
+            )
+          ),
+
+          // Logs List (Spacious Read-Only Cards)
+          h('div', { style: { display: 'flex', flexDirection: 'column', gap: '1.5rem' } },
+            ...filteredPosts.map((post, idx) =>
+              h('article', {
+                key: post.id,
+                className: 'os-window',
+                style: { padding: '1.75rem', display: 'flex', flexDirection: 'column', gap: '1rem' }
+              },
+                h('div', { className: 'font-mono', style: { fontSize: '12px', color: '#4E5D63' } },
+                  h('span', { style: { color: '#512B58', fontWeight: 600 } }, String(idx + 1).padStart(2, '0')),
+                  ' · ',
+                  h('span', null, post.date),
+                  ' · ',
+                  h('span', { style: { color: '#2A7886', fontWeight: 500 } }, (post.tags || []).map(t => `#${t}`).join(' / '))
+                ),
+                h('h3', { className: 'font-display', style: { fontSize: '1.35rem', fontWeight: 700, color: '#512B58' } },
+                  h('button', {
+                    type: 'button',
+                    onClick: () => setReadingPost(post),
+                    style: { textAlign: 'left', color: 'inherit' }
+                  }, post.title)
+                ),
+                h('p', { style: { fontSize: '0.96rem', color: '#231926', maxWidth: '78ch' } }, post.summary),
+                h('div', { style: { display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '0.75rem', paddingTop: '1rem', borderTop: '1px solid rgba(42, 120, 134, 0.28)' } },
+                  h('span', { className: 'font-mono', style: { fontSize: '11.5px', color: '#4E5D63' } }, `Source: ${post.source || 'logs/'}`),
+                  h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: '0.6rem' } },
+                    h('button', {
+                      type: 'button',
+                      onClick: () => setReadingPost(post),
+                      className: 'os-btn os-btn-primary'
+                    }, 'Read Full Entry'),
+                    h('button', {
+                      type: 'button',
+                      onClick: () => downloadPostAsMarkdown(post),
+                      className: 'os-btn'
+                    }, 'Raw .md')
+                  )
+                )
+              )
+            )
+          )
+        )
+      );
+
+      // --- SECTION 2: OPERATION FLAGGO (READ-ONLY FROM state.json) ---
+      const renderOperationFlaggo = () => h('div', { style: { display: 'flex', flexDirection: 'column', gap: '2.25rem' } },
+        h('section', { className: 'os-window' },
+          h('div', { className: 'os-titlebar os-titlebar-teal' },
+            h('span', null, 'ASSESSMENT SPECIFICATION // OPERATION FLAGGO'),
+            h('span', null, 'AWS · LINUX · TERRAFORM · DOCKER · GITHUB ACTIONS')
+          ),
+          h('div', { style: { padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' } },
+            h('h1', { className: 'font-display', style: { fontSize: '1.9rem', fontWeight: 700, color: '#512B58' } },
+              'Operation Flaggo — 4-App Feature Flag & Runtime Configuration Platform'
+            ),
+            h('p', { style: { fontSize: '0.98rem', color: '#231926', maxWidth: '75ch' } },
+              'Deploy, troubleshoot, secure, document, and recover Flaggo — a 4-app self-hosted Feature Flag & Runtime Configuration platform (Control Plane Frontend, Control Plane Backend Web API, Data Plane Client/Evaluator, and private RDS PostgreSQL database).'
+            ),
+            h('div', { className: 'grid-4', style: { marginTop: '0.5rem' } },
+              h('div', { className: 'os-panel', style: { padding: '1.1rem' } },
+                h('div', { className: 'font-mono', style: { fontSize: '11.5px', color: '#4E5D63' } }, 'Milestone Tasks (Independent)'),
+                h('div', { className: 'font-display tabular-nums', style: { fontSize: '1.65rem', fontWeight: 700, color: '#512B58', marginTop: '0.25rem' } },
+                  `${progressStats.opInd} / ${progressStats.opTotal} (${progressStats.opPercent}%)`
+                )
+              ),
+              h('div', { className: 'os-panel', style: { padding: '1.1rem' } },
+                h('div', { className: 'font-mono', style: { fontSize: '11.5px', color: '#4E5D63' } }, 'Acceptance Gates Passed'),
+                h('div', { className: 'font-display tabular-nums', style: { fontSize: '1.65rem', fontWeight: 700, color: '#2A7886', marginTop: '0.25rem' } },
+                  `${progressStats.opPassedGates} / ${progressStats.opTotalGates}`
+                )
+              ),
+              h('div', { className: 'os-panel', style: { padding: '1.1rem' } },
+                h('div', { className: 'font-mono', style: { fontSize: '11.5px', color: '#4E5D63' } }, 'Target Effort'),
+                h('div', { className: 'font-display tabular-nums', style: { fontSize: '1.65rem', fontWeight: 700, color: '#512B58', marginTop: '0.25rem' } },
+                  '18–25 hrs'
+                )
+              ),
+              h('div', { className: 'os-panel', style: { padding: '1.1rem' } },
+                h('div', { className: 'font-mono', style: { fontSize: '11.5px', color: '#4E5D63' } }, 'Deliverables Completed'),
+                h('div', { className: 'font-display tabular-nums', style: { fontSize: '1.65rem', fontWeight: 700, color: '#2A7886', marginTop: '0.25rem' } },
+                  `${FLAGGO_DELIVERABLES.filter(d => deliverables[d.id]).length} / ${FLAGGO_DELIVERABLES.length}`
+                )
+              )
+            )
+          )
+        ),
+
+        ...FLAGGO_MILESTONES.map(ms => {
+          const msDoneCount = ms.tasks.filter(t => opTasks[t.id] === STATUS.INDEPENDENT).length;
+          const msAiCount = ms.tasks.filter(t => opTasks[t.id] === STATUS.AI_ASSISTED).length;
+          const gateState = opGates[ms.gateId] || STATUS.PENDING;
+          return h('section', { key: ms.id, className: 'os-window' },
+            h('div', { className: 'os-titlebar' },
+              h('span', null, ms.title.toUpperCase()),
+              h('div', { style: { display: 'flex', alignItems: 'center', gap: '0.6rem' } },
+                h('span', {
+                  style: {
+                    padding: '2px 8px',
+                    backgroundColor: 'rgba(255, 255, 255, 0.14)',
+                    color: '#F1F3F4',
+                    fontSize: '11px'
+                  }
+                }, `${msDoneCount}/${ms.tasks.length} IND · ${msAiCount} AI`),
+                h('span', {
+                  style: {
+                    padding: '2px 8px',
+                    backgroundColor: gateState === STATUS.INDEPENDENT ? '#2A7886' : gateState === STATUS.AI_ASSISTED ? '#79BAC1' : 'rgba(255,255,255,0.18)',
+                    color: gateState === STATUS.AI_ASSISTED ? '#231926' : '#FFFFFF',
+                    fontSize: '11px',
+                    fontWeight: 700
+                  }
+                }, gateState === STATUS.INDEPENDENT ? '● GATE PASSED' : gateState === STATUS.AI_ASSISTED ? '● AI GATE' : '○ IN PROGRESS')
+              )
+            ),
+            h('div', { style: { padding: '1.75rem', display: 'flex', flexDirection: 'column', gap: '1rem' } },
+              h('p', { style: { fontSize: '0.92rem', color: '#4E5D63' } }, ms.subtitle),
+              ...ms.tasks.map(t =>
+                h('div', {
+                  key: t.id,
+                  style: getTaskRowStyle(opTasks[t.id])
+                },
+                  h('div', { style: { display: 'flex', alignItems: 'center', gap: '0.85rem', flex: '1 1 320px' } },
+                    h(StatusBadge, { status: opTasks[t.id] }),
+                    h('span', { style: { fontSize: '0.93rem', fontWeight: opTasks[t.id] && opTasks[t.id] !== STATUS.PENDING ? 500 : 400 } }, t.text)
+                  ),
+                  h(StatusIndicator, { status: opTasks[t.id] })
+                )
+              ),
+              h('div', {
+                style: {
+                  marginTop: '0.5rem',
+                  padding: '1rem 1.15rem',
+                  backgroundColor: opGates[ms.gateId] === STATUS.INDEPENDENT
+                    ? 'rgba(121, 186, 193, 0.28)'
+                    : opGates[ms.gateId] === STATUS.AI_ASSISTED
+                    ? 'rgba(81, 43, 88, 0.1)'
+                    : '#FFFFFF',
+                  border: '1.5px solid #2A7886',
+                  borderLeft: opGates[ms.gateId] === STATUS.INDEPENDENT
+                    ? '6px solid #2A7886'
+                    : '6px solid #512B58',
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: '1rem'
+                }
+              },
+                h('div', { style: { display: 'flex', alignItems: 'center', gap: '0.85rem', flex: '1 1 320px' } },
+                  h(StatusBadge, { status: opGates[ms.gateId] }),
+                  h('div', null,
+                    h('span', { className: 'font-mono', style: { fontSize: '12px', color: '#512B58', fontWeight: 700 } }, 'ACCEPTANCE GATE: '),
+                    h('span', { style: { fontSize: '0.9rem' } }, ms.acceptance)
+                  )
+                ),
+                h(StatusIndicator, { status: opGates[ms.gateId] })
+              )
+            )
+          );
+        }),
+
+        h('div', { className: 'grid-2' },
+          h('section', { className: 'os-window' },
+            h('div', { className: 'os-titlebar os-titlebar-teal' }, h('span', null, 'REQUIRED DELIVERABLES')),
+            h('div', { style: { padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' } },
+              ...FLAGGO_DELIVERABLES.map(d => {
+                const checked = Boolean(deliverables[d.id]);
+                return h('div', {
+                  key: d.id,
+                  className: 'os-panel',
+                  style: {
+                    padding: '0.85rem 1rem',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    gap: '1rem',
+                    backgroundColor: checked ? 'rgba(121, 186, 193, 0.25)' : '#F1F3F4',
+                    borderColor: checked ? '#512B58' : 'rgba(42, 120, 134, 0.45)',
+                    borderLeft: checked ? '5px solid #2A7886' : '5px solid #79BAC1'
+                  }
+                },
+                  h('div', null,
+                    h('div', { className: 'font-mono', style: { fontSize: '12.5px', fontWeight: 600, color: '#512B58' } }, d.name),
+                    h('div', { style: { fontSize: '12.5px', color: '#4E5D63', marginTop: '2px' } }, d.desc)
+                  ),
+                  h('span', {
+                    className: 'font-mono',
+                    style: {
+                      padding: '3px 9px',
+                      fontSize: '11.5px',
+                      fontWeight: 600,
+                      backgroundColor: checked ? '#2A7886' : '#FFFFFF',
+                      color: checked ? '#FFFFFF' : '#4E5D63',
+                      border: '1px solid #512B58'
+                    }
+                  }, checked ? 'DONE' : 'PENDING')
+                );
+              })
+            )
+          ),
+          h('section', { className: 'os-window' },
+            h('div', { className: 'os-titlebar' }, h('span', null, 'OPERATIONAL CONSTRAINTS & COMPLETION')),
+            h('div', { style: { padding: '1.75rem', display: 'flex', flexDirection: 'column', gap: '1rem', fontSize: '0.92rem' } },
+              h('p', null, '1. Use synthetic data only. No passwords or long-lived cloud credentials may be committed to Git.'),
+              h('p', null, '2. Do not expose PostgreSQL, internal service ports, Docker sockets, or SSH to the public internet.'),
+              h('p', null, '3. Do not solve an infrastructure connectivity problem by making a database publicly accessible or opening all ingress ports.'),
+              h('p', null, '4. Estimate costs before provisioning and use an approved budget. Budget alerts are notifications, not automatic spending limits.'),
+              h('p', null, '5. Include a verified teardown procedure that removes billable lab resources without destroying the evidence retained in Git.'),
+              h('div', { className: 'os-panel', style: { padding: '1.15rem', marginTop: '0.5rem' } },
+                h('div', { className: 'font-mono', style: { fontSize: '12px', color: '#512B58', fontWeight: 600 } }, 'DEFINITION OF COMPLETION'),
+                h('p', { style: { fontSize: '0.88rem', color: '#4E5D63', marginTop: '0.35rem' } },
+                  'A partial deployment accompanied by rigorous evidence of what failed, why it failed, and what remains to be done is more valuable than an undocumented deployment that happens to work.'
+                )
+              )
+            )
+          )
+        )
+      );
+
+      // --- SECTION 3: 12-WEEK DEVOPS ROADMAP (READ-ONLY FROM state.json) ---
+      const renderRoadmapSection = () => h('div', { style: { display: 'flex', flexDirection: 'column', gap: '2rem' } },
+        h('div', { className: 'os-window', style: { padding: '0.85rem 1.25rem', display: 'flex', flexWrap: 'wrap', gap: '0.6rem', justifyContent: 'space-between', alignItems: 'center' } },
+          h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: '0.5rem' } },
+            ...[
+              { id: 'dashboard', label: '01. Overview' },
+              { id: 'plan', label: '02. 12-Week Plan' },
+              { id: 'assessments', label: '03. Competency Matrix' },
+              { id: 'branches', label: '04. Career Branches' },
+              { id: 'portfolio', label: '05. Portfolio Signals' },
+              { id: 'applications', label: '06. Job Cohorts' }
+            ].map(tab =>
+              h('button', {
+                key: tab.id,
+                type: 'button',
+                onClick: () => setRoadmapSubTab(tab.id),
+                className: 'font-mono',
+                style: {
+                  padding: '0.5rem 0.9rem',
+                  fontSize: '12px',
+                  backgroundColor: roadmapSubTab === tab.id ? '#512B58' : '#F1F3F4',
+                  color: roadmapSubTab === tab.id ? '#FFFFFF' : '#231926',
+                  fontWeight: roadmapSubTab === tab.id ? 600 : 400,
+                  border: '1px solid #2A7886'
+                }
+              }, tab.label)
+            )
+          ),
+          h('div', { className: 'font-mono', style: { fontSize: '12.5px', color: '#2A7886', fontWeight: 600 } },
+            `Mastered: ${progressStats.independentTasks}/${progressStats.totalTasks} (${progressStats.completionPercent}%)`
+          )
+        ),
+
+        // Overview
+        roadmapSubTab === 'dashboard' ? h('div', { style: { display: 'flex', flexDirection: 'column', gap: '1.75rem' } },
+          h('div', { className: 'os-window' },
+            h('div', { className: 'os-titlebar os-titlebar-teal' }, h('span', null, 'ROADMAP OVERVIEW // RICARDO GIRO (xarop_pa_toss)')),
+            h('div', { style: { padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1rem' } },
+              h('h2', { className: 'font-display', style: { fontSize: '1.65rem', fontWeight: 700, color: '#512B58' } },
+                '12-Week Infrastructure & DevOps Execution Plan'
+              ),
+              h('p', { style: { color: '#231926', maxWidth: '68ch' } },
+                '"The objective is not merely to learn faster; it is to make Ricardo increasingly difficult for the market to misclassify as support only."'
+              ),
+              h('div', { className: 'os-panel', style: { padding: '1rem 1.25rem', maxWidth: '68ch' } },
+                h('div', { className: 'font-mono', style: { fontSize: '12px', color: '#512B58', fontWeight: 600 } },
+                  'Git-Backed State Manifest (state.json)'
+                ),
+                h('p', { style: { fontSize: '13px', color: '#4E5D63', marginTop: '0.25rem' } },
+                  'All task statuses, acceptance gates, and competency evaluations are read-only on the web and updated by committing state.json via Git CLI.'
+                )
+              )
+            )
+          ),
+          h('div', { className: 'grid-4' },
+            h('div', { className: 'os-window', style: { padding: '1.5rem' } },
+              h('div', { className: 'font-mono', style: { fontSize: '12px', color: '#4E5D63' } }, 'Independent Mastery'),
+              h('div', { className: 'font-display tabular-nums', style: { fontSize: '2.2rem', fontWeight: 700, color: '#512B58', marginTop: '0.25rem' } }, `${progressStats.completionPercent}%`),
+              h('div', { className: 'os-progress-track', style: { marginTop: '0.75rem' } },
+                h('div', { className: 'os-progress-fill', style: { width: `${progressStats.completionPercent}%` } })
+              )
+            ),
+            h('div', { className: 'os-window', style: { padding: '1.5rem' } },
+              h('div', { className: 'font-mono', style: { fontSize: '12px', color: '#4E5D63' } }, 'Decision Gates Passed'),
+              h('div', { className: 'font-display tabular-nums', style: { fontSize: '2.2rem', fontWeight: 700, color: '#2A7886', marginTop: '0.25rem' } },
+                `${progressStats.passedGates} / ${progressStats.totalGates}`
+              )
+            ),
+            h('div', { className: 'os-window', style: { padding: '1.5rem' } },
+              h('div', { className: 'font-mono', style: { fontSize: '12px', color: '#4E5D63' } }, 'Active Specialization'),
+              h('div', { className: 'font-display', style: { fontSize: '1.4rem', fontWeight: 700, marginTop: '0.5rem', color: branch ? '#512B58' : '#4E5D63' } },
+                branch ? `Path ${branch}` : 'Undecided (Week 6)'
+              )
+            ),
+            h('div', { className: 'os-window', style: { padding: '1.5rem' } },
+              h('div', { className: 'font-mono', style: { fontSize: '12px', color: '#4E5D63' } }, 'Job Applications Sent'),
+              h('div', { className: 'font-display tabular-nums', style: { fontSize: '2.2rem', fontWeight: 700, color: '#512B58', marginTop: '0.25rem' } },
+                String(Object.values(applications || {}).reduce((acc, c) => acc + ((c && c.applied) || 0), 0))
+              )
+            )
+          )
+        ) : null,
+
+        // 12-Week Plan
+        roadmapSubTab === 'plan' ? h('div', { style: { display: 'flex', flexDirection: 'column', gap: '1.75rem' } },
+          ...ROADMAP_DATA.map(week =>
+            h('div', { key: week.id, className: 'os-window' },
+              h('div', { className: 'os-titlebar' },
+                h('span', null, week.title.toUpperCase()),
+                h('span', null, gates[week.gate.id] === STATUS.INDEPENDENT ? '● GATE PASSED' : '○ PENDING GATE')
+              ),
+              h('div', { style: { padding: '1.75rem', display: 'flex', flexDirection: 'column', gap: '1rem' } },
+                h('p', { style: { fontSize: '0.92rem', color: '#4E5D63' } }, week.focus),
+                ...week.tasks.map(task =>
+                  h('div', {
+                    key: task.id,
+                    style: getTaskRowStyle(tasks[task.id])
+                  },
+                    h('div', { style: { display: 'flex', alignItems: 'center', gap: '0.85rem', flex: '1 1 300px' } },
+                      h(StatusBadge, { status: tasks[task.id] }),
+                      h('span', { style: { fontSize: '0.92rem' } }, task.text)
+                    ),
+                    h(StatusIndicator, { status: tasks[task.id] })
+                  )
+                ),
+                h('div', {
+                  style: {
+                    padding: '0.95rem 1.1rem',
+                    backgroundColor: gates[week.gate.id] === STATUS.INDEPENDENT ? 'rgba(121, 186, 193, 0.28)' : '#FFFFFF',
+                    border: '1.5px solid #2A7886',
+                    borderLeft: gates[week.gate.id] === STATUS.INDEPENDENT ? '6px solid #2A7886' : '6px solid #512B58',
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: '0.85rem'
+                  }
+                },
+                  h('div', { style: { display: 'flex', alignItems: 'center', gap: '0.85rem', flex: '1 1 300px' } },
+                    h(StatusBadge, { status: gates[week.gate.id] }),
+                    h('div', null,
+                      h('span', { className: 'font-mono', style: { fontSize: '12px', color: '#512B58', fontWeight: 600 } }, `${week.gate.name}: `),
+                      h('span', { style: { fontSize: '0.9rem' } }, week.gate.criteria)
+                    )
+                  ),
+                  h(StatusIndicator, { status: gates[week.gate.id] })
+                )
+              )
+            )
+          )
+        ) : null,
+
+        // Competency Matrix (Read-Only)
+        roadmapSubTab === 'assessments' ? h('div', { style: { display: 'flex', flexDirection: 'column', gap: '1.75rem' } },
+          h('div', { className: 'os-window', style: { padding: '1.5rem' } },
+            h('div', { className: 'font-mono', style: { fontSize: '12.5px', color: '#512B58', fontWeight: 600 } }, 'Honesty — Audited Competency Disclosure'),
+            h('p', { style: { fontSize: '0.92rem', color: '#231926', marginTop: '0.4rem' } },
+              'Working code is project evidence only — it never establishes independent competence. AWS experience does not automatically satisfy Azure assessments. A skill is not marketable until T4 is passed independently.'
+            )
+          ),
+          h('div', { className: 'os-window', style: { overflowX: 'auto', padding: '1.25rem' } },
+            h('table', null,
+              h('thead', null,
+                h('tr', { style: { borderBottom: '2px solid #512B58' } },
+                  h('th', { className: 'font-mono', style: { padding: '0.75rem', textAlign: 'left', fontSize: '12px', color: '#512B58' } }, 'Skill / Domain'),
+                  ...T_GATES.map(g =>
+                    h('th', { key: g.id, className: 'font-mono', style: { padding: '0.75rem', textAlign: 'center', fontSize: '12px' } },
+                      h('div', { style: { color: '#512B58' } }, g.name),
+                      h('div', { style: { fontSize: '10.5px', color: '#4E5D63', fontWeight: 400 } }, g.desc)
+                    )
+                  )
+                )
+              ),
+              h('tbody', null,
+                ...ASSESSMENTS.map(skill =>
+                  h('tr', { key: skill.id, style: { borderBottom: '1px solid rgba(42, 120, 134, 0.25)' } },
+                    h('td', { style: { padding: '0.75rem', fontWeight: 600, fontSize: '0.9rem' } }, skill.name),
+                    ...T_GATES.map(gate => {
+                      const key = `${skill.id}_${gate.id}`;
+                      const val = assessments[key] || STATUS.PENDING;
+                      return h('td', { key, style: { padding: '0.5rem', textAlign: 'center' } },
+                        h(StatusBadge, { status: val })
+                      );
+                    })
+                  )
+                )
+              )
+            )
+          ),
+          h('div', { className: 'os-window', style: { padding: '1.5rem' } },
+            h('h3', { className: 'font-display', style: { fontSize: '1.25rem', fontWeight: 700, color: '#512B58', marginBottom: '1rem' } },
+              'Three-Axis Competency Evidence'
+            ),
+            h('div', { className: 'grid-3' },
+              ...COMPETENCY_EVIDENCE.map(ev => {
+                const sk = ASSESSMENTS.find(s => s.id === ev.id);
+                return h('div', { key: ev.id, className: 'os-panel', style: { padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.45rem' } },
+                  h('div', { className: 'font-mono', style: { display: 'flex', justifyContent: 'space-between', fontSize: '12px', fontWeight: 600 } },
+                    h('span', { style: { color: '#512B58' } }, sk ? sk.name : ev.id),
+                    h('span', { style: { color: '#2A7886' } }, ev.provider.toUpperCase())
+                  ),
+                  h('div', { style: { fontSize: '12px', color: '#231926' } }, `Evidence: ${ev.project_evidence.ref}`),
+                  h('div', { style: { fontSize: '12px', color: '#512B58' } }, `AI: ${ev.ai_assisted.note}`),
+                  h('div', { style: { fontSize: '12px', color: '#4E5D63' } }, `Independent: ${ev.independent.note}`)
+                );
+              })
+            )
+          )
+        ) : null,
+
+        // Career Branches (Read-Only)
+        roadmapSubTab === 'branches' ? h('div', { className: 'grid-3' },
+          ...BRANCHES.map(b =>
+            h('div', {
+              key: b.id,
+              className: 'os-window',
+              style: {
+                padding: '1.65rem',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between',
+                backgroundColor: branch === b.id ? 'rgba(121, 186, 193, 0.2)' : '#FFFFFF'
+              }
+            },
+              h('div', { style: { display: 'flex', flexDirection: 'column', gap: '0.75rem' } },
+                h('div', { className: 'font-mono', style: { fontSize: '11.5px', color: '#2A7886', fontWeight: 600 } }, b.type),
+                h('h3', { className: 'font-display', style: { fontSize: '1.25rem', fontWeight: 700, color: '#512B58' } }, b.name),
+                h('p', { style: { fontSize: '0.9rem', color: '#231926' } }, b.target),
+                h('p', { style: { fontSize: '0.86rem', color: '#4E5D63' } }, `Core: ${b.core}`),
+                h('p', { style: { fontSize: '0.86rem', color: '#4E5D63', fontStyle: 'italic' } }, `"${b.reason}"`)
+              ),
+              h('div', {
+                className: 'font-mono',
+                style: {
+                  marginTop: '1.5rem',
+                  padding: '0.5rem 0.85rem',
+                  textAlign: 'center',
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  backgroundColor: branch === b.id ? '#512B58' : '#F1F3F4',
+                  color: branch === b.id ? '#FFFFFF' : '#4E5D63',
+                  border: '1px solid #512B58'
+                }
+              }, branch === b.id ? '● Active Specialization' : 'Candidate Branch')
+            )
+          )
+        ) : null,
+
+        // Portfolio Signals (Read-Only)
+        roadmapSubTab === 'portfolio' ? h('div', { style: { display: 'flex', flexDirection: 'column', gap: '1.5rem' } },
+          ...PORTFOLIO_PROJECTS.map(proj => {
+            const repoLink = portfolio[`${proj.id}_link`];
+            return h('div', { key: proj.id, className: 'os-window', style: { padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' } },
+              h('div', { style: { display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '1rem' } },
+                h('div', null,
+                  h('h3', { className: 'font-display', style: { fontSize: '1.25rem', fontWeight: 700, color: '#512B58' } }, proj.name),
+                  h('p', { style: { fontSize: '12.5px', color: '#4E5D63' } }, `Proof: ${proj.proof}`)
+                ),
+                repoLink
+                  ? h('a', { href: repoLink, target: '_blank', rel: 'noreferrer', className: 'os-btn os-btn-primary' }, 'View Repository ↗')
+                  : h('span', { className: 'font-mono', style: { fontSize: '12px', color: '#4E5D63' } }, 'Repository: In Progress')
+              ),
+              h('div', { className: 'grid-6' },
+                ...SIGNALS.map(sig => {
+                  const k = `${proj.id}_${sig.id}`;
+                  const active = Boolean(portfolio[k]);
+                  return h('div', {
+                    key: k,
+                    className: 'os-panel',
+                    style: {
+                      padding: '0.75rem',
+                      backgroundColor: active ? '#79BAC1' : '#F1F3F4',
+                      borderColor: active ? '#512B58' : 'rgba(42, 120, 134, 0.45)',
+                      borderLeft: active ? '4px solid #2A7886' : '4px solid #79BAC1'
+                    }
+                  },
+                    h('div', { className: 'font-mono', style: { fontSize: '11.5px', fontWeight: 600, color: '#512B58' } }, sig.name),
+                    h('div', { style: { fontSize: '11px', color: '#231926', marginTop: '2px' } }, sig.channel)
+                  );
+                })
+              )
+            );
+          })
+        ) : null,
+
+        // Job Cohorts (Read-Only)
+        roadmapSubTab === 'applications' ? h('div', { className: 'os-window', style: { padding: '1.5rem', overflowX: 'auto' } },
+          h('table', null,
+            h('thead', null,
+              h('tr', { style: { borderBottom: '2px solid #512B58' } },
+                h('th', { className: 'font-mono', style: { padding: '0.75rem', textAlign: 'left', fontSize: '12px', color: '#512B58' } }, 'Cohort'),
+                h('th', { className: 'font-mono', style: { padding: '0.75rem', textAlign: 'left', fontSize: '12px', color: '#512B58' } }, 'Target'),
+                h('th', { className: 'font-mono', style: { padding: '0.75rem', textAlign: 'center', fontSize: '12px', color: '#512B58' } }, 'Applied'),
+                h('th', { className: 'font-mono', style: { padding: '0.75rem', textAlign: 'center', fontSize: '12px', color: '#512B58' } }, 'Recruiter Screen'),
+                h('th', { className: 'font-mono', style: { padding: '0.75rem', textAlign: 'center', fontSize: '12px', color: '#512B58' } }, 'Tech Interview')
+              )
+            ),
+            h('tbody', null,
+              ...COHORTS.map(c =>
+                h('tr', { key: c.id, style: { borderBottom: '1px solid rgba(42, 120, 134, 0.25)' } },
+                  h('td', { style: { padding: '0.85rem' } },
+                    h('div', { style: { fontWeight: 600, fontSize: '0.92rem', color: '#512B58' } }, c.name),
+                    h('div', { style: { fontSize: '12px', color: '#4E5D63' } }, c.titles)
+                  ),
+                  h('td', { className: 'font-mono', style: { padding: '0.85rem', fontSize: '12.5px', color: '#4E5D63' } }, `~${c.target}`),
+                  ...['applied', 'screens', 'tech'].map(field =>
+                    h('td', { key: field, style: { padding: '0.85rem', textAlign: 'center' } },
+                      h('span', { className: 'font-mono tabular-nums', style: { fontWeight: 600, fontSize: '1rem', color: '#512B58' } },
+                        String((applications[c.id] && applications[c.id][field]) || 0)
+                      )
+                    )
+                  )
+                )
+              )
+            )
+          )
+        ) : null
+      );
+
+      // --- SECTION 4: REAL GITHUB REPOSITORIES & FLAGGO 4-APP ARCHITECTURE ---
+      const renderProjectsAndRepos = () => h('div', { style: { display: 'flex', flexDirection: 'column', gap: '2.25rem' } },
+        // Flaggo 4-App Architecture Specification
+        h('section', { className: 'os-window' },
+          h('div', { className: 'os-titlebar' },
+            h('span', null, 'ARCHITECTURE SPECIFICATION // FLAGGO (4-APP SOLUTION)'),
+            h('span', null, 'CONTROL PLANE + DATA PLANE + PERSISTENCE LAYER')
+          ),
+          h('div', { style: { padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' } },
+            h('div', { style: { maxWidth: '75ch', display: 'flex', flexDirection: 'column', gap: '0.75rem' } },
+              h('h1', { className: 'font-display', style: { fontSize: '1.85rem', fontWeight: 700, color: '#512B58' } },
+                'Flaggo — Self-Hosted Feature Flag & Runtime Configuration Platform'
+              ),
+              h('p', { style: { fontSize: '0.96rem', color: '#231926' } },
+                h('strong', { style: { color: '#512B58' } }, 'The Problem: '),
+                'Deploying code shouldn\'t mean releasing features. Traditional release cycles require full application restarts or redeployments to toggle functionality, introduce canary updates, or roll back breaking changes.'
+              ),
+              h('p', { style: { fontSize: '0.96rem', color: '#231926' } },
+                h('strong', { style: { color: '#2A7886' } }, 'The Solution: '),
+                'Flaggo decouples deployment from release. It provides a centralized Control Plane where engineers toggle features, set user rollout percentages, and trigger instant kill switches in real time. Client applications (Data Plane) consume these rules via lightweight polling or push updates, evaluating feature logic dynamically in memory with zero downtime and zero restarts.'
+              )
+            ),
+            h('div', { className: 'grid-2' },
+              h('div', { className: 'os-panel', style: { padding: '1.35rem' } },
+                h('div', { className: 'font-mono', style: { fontSize: '12px', color: '#512B58', fontWeight: 600 } }, '01. Control Plane Frontend'),
+                h('p', { style: { fontSize: '0.9rem', color: '#231926', marginTop: '0.4rem' } },
+                  'Operator management dashboard for toggling boolean flags, configuring percentage rollouts, and tripping emergency kill switches.'
+                )
+              ),
+              h('div', { className: 'os-panel', style: { padding: '1.35rem' } },
+                h('div', { className: 'font-mono', style: { fontSize: '12px', color: '#2A7886', fontWeight: 600 } }, '02. Control Plane Backend Web API'),
+                h('p', { style: { fontSize: '0.9rem', color: '#231926', marginTop: '0.4rem' } },
+                  'REST & SSE service managing feature flag rules, environment isolation, rollout configurations, and /health/live + /health/ready probes.'
+                )
+              ),
+              h('div', { className: 'os-panel', style: { padding: '1.35rem' } },
+                h('div', { className: 'font-mono', style: { fontSize: '12px', color: '#512B58', fontWeight: 600 } }, '03. Data Plane Client & Rule Evaluator'),
+                h('p', { style: { fontSize: '0.9rem', color: '#231926', marginTop: '0.4rem' } },
+                  'Consumes feature rules via lightweight polling or push updates, evaluating feature logic dynamically in memory with zero downtime and zero process restarts.'
+                )
+              ),
+              h('div', { className: 'os-panel', style: { padding: '1.35rem' } },
+                h('div', { className: 'font-mono', style: { fontSize: '12px', color: '#2A7886', fontWeight: 600 } }, '04. Persistence & Audit Store (PostgreSQL)'),
+                h('p', { style: { fontSize: '0.9rem', color: '#231926', marginTop: '0.4rem' } },
+                  'Private Single-AZ RDS PostgreSQL instance storing feature flag definitions, rollout percentages, environment scopes, and audit history.'
+                )
+              )
+            )
+          )
+        ),
+
+        // Live GitHub Repositories Fetched from https://api.github.com/users/xarop-pa-toss/repos
+        h('section', { className: 'os-window' },
+          h('div', { className: 'os-titlebar os-titlebar-teal' },
+            h('span', null, `LIVE GITHUB REPOSITORIES // github.com/${bio.githubUser}`),
+            h('button', { type: 'button', onClick: fetchLiveGitActivity, style: { color: '#FFFFFF', textDecoration: 'underline' } }, 'Refresh')
+          ),
+          h('div', { style: { padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' } },
+            githubRepos.length === 0
+              ? h('p', { className: 'font-mono', style: { fontSize: '0.9rem', color: '#4E5D63' } },
+                  gitSyncStatus || `Fetching public repositories from https://api.github.com/users/${bio.githubUser}/repos ...`
+                )
+              : h('div', { className: 'grid-2' },
+                  ...githubRepos.map(repo =>
+                    h('a', {
+                      key: repo.id,
+                      href: repo.html_url,
+                      target: '_blank',
+                      rel: 'noreferrer',
+                      className: 'os-panel',
+                      style: { padding: '1.25rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '0.75rem' }
+                    },
+                      h('div', null,
+                        h('div', { className: 'font-mono', style: { fontSize: '13px', fontWeight: 600, color: '#512B58' } }, repo.full_name),
+                        h('p', { style: { fontSize: '0.88rem', color: '#231926', marginTop: '0.35rem' } }, repo.description || 'Public repository on GitHub.')
+                      ),
+                      h('div', { className: 'font-mono', style: { fontSize: '11.5px', color: '#2A7886' } },
+                        `${repo.language || 'Repo'} · Updated ${String(repo.updated_at || '').split('T')[0]} ↗`
+                      )
+                    )
+                  )
+                )
+          )
+        )
+      );
+
+      // Build bottom commit stream strictly from real live state (no fake commits)
+      const tickerItems = useMemo(() => {
+        const items = [];
+        if (githubCommits.length > 0) {
+          githubCommits.forEach(c => {
+            items.push(`[GITHUB] ${c.repo}@${c.branch} (${c.hash}) — ${c.message} (${c.date})`);
+          });
+        } else {
+          items.push(`[GITHUB] github.com/${bio.githubUser} — ${gitSyncStatus || 'Polling public events API...'}`);
+        }
+
+        if (giteaCommits.length > 0) {
+          giteaCommits.forEach(c => {
+            items.push(`[GITEA] ${c.repo}@${c.branch} (${c.hash}) — ${c.message} (${c.date})`);
+          });
+        } else if (bio.giteaBaseUrl && bio.giteaBaseUrl.trim()) {
+          items.push(`[GITEA] ${bio.giteaBaseUrl} (@${bio.giteaUser}) — Polling Gitea commits`);
+        }
+        return items;
+      }, [githubCommits, giteaCommits, bio.githubUser, bio.giteaBaseUrl, bio.giteaUser, gitSyncStatus]);
+
+      return h('div', { style: { minHeight: '100vh', display: 'flex', flexDirection: 'column' } },
+        // --- 3-ZONE TOP BAR: "Layer Zero" | 4 Nav Links | Bio Button ---
+        h('header', { className: 'top-bar' },
+          h('button', {
+            type: 'button',
+            onClick: () => setMainSection('logs'),
+            className: 'font-display',
+            style: { fontSize: '1.35rem', fontWeight: 700, color: '#512B58', whiteSpace: 'nowrap', flexShrink: 0 }
+          }, 'Layer Zero'),
+
+          h('nav', { className: 'nav-links', ariaLabel: 'Main Navigation' },
+            ...[
+              { id: 'logs', label: 'The Logs' },
+              { id: 'roadmap', label: 'DevOps Roadmap' },
+              { id: 'operation', label: 'Operation Flaggo' },
+              { id: 'projects', label: 'Flaggo & Repos' }
+            ].map(item =>
+              h('button', {
+                key: item.id,
+                type: 'button',
+                onClick: () => setMainSection(item.id),
+                className: `nav-link ${mainSection === item.id ? 'nav-link-active' : ''}`
+              }, item.label)
+            )
+          ),
+
+          h('button', {
+            type: 'button',
+            onClick: () => setBioOpen(true),
+            className: 'os-btn os-btn-primary'
+          }, 'Bio // Ricardo Giro')
+        ),
+
+        // --- MAIN WORKSPACE ---
+        h('main', { className: 'shell-container', style: { flex: 1, width: '100%' } },
+          mainSection === 'logs' ? renderHomeLogs() :
+          mainSection === 'roadmap' ? renderRoadmapSection() :
+          mainSection === 'operation' ? renderOperationFlaggo() :
+          renderProjectsAndRepos()
+        ),
+
+        // --- BIO MODAL (READ-ONLY, OPENABLE FROM ANYWHERE VIA TOP BAR) ---
+        bioOpen ? h('div', { className: 'modal-backdrop', role: 'dialog', ariaModal: 'true', ariaLabel: 'Bio — Ricardo Giro' },
+          h('div', { className: 'os-window', style: { width: '100%', maxWidth: '640px' } },
+            h('div', { className: 'os-titlebar' },
+              h('span', null, `BIO // ${bio.name.toUpperCase()} (@${bio.handle})`),
+              h('button', { type: 'button', onClick: () => setBioOpen(false), style: { color: '#FFFFFF', fontWeight: 700 } }, '[X]')
+            ),
+            h('div', { style: { padding: '1.75rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' } },
+              h('div', { style: { display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', borderBottom: '1px solid rgba(42, 120, 134, 0.35)', paddingBottom: '1rem' } },
+                h('div', null,
+                  h('div', { className: 'font-mono', style: { fontSize: '12px', color: '#2A7886', fontWeight: 600 } }, `@${bio.handle}`),
+                  h('div', { className: 'font-display', style: { fontSize: '1.5rem', fontWeight: 700, color: '#512B58' } }, bio.name),
+                  h('div', { style: { fontSize: '0.9rem', color: '#4E5D63' } }, bio.role)
+                ),
+                h('div', { style: { display: 'flex', gap: '0.6rem' } },
+                  h('a', { href: bio.githubUrl, target: '_blank', rel: 'noreferrer', className: 'os-btn os-btn-primary' }, 'GitHub (xarop-pa-toss) ↗'),
+                  bio.giteaBaseUrl ? h('a', { href: bio.giteaBaseUrl, target: '_blank', rel: 'noreferrer', className: 'os-btn' }, 'Self-Hosted Gitea ↗') : null
+                )
+              ),
+              h('p', { style: { fontSize: '0.95rem', color: '#231926' } }, bio.summary),
+              h('div', { className: 'os-panel', style: { padding: '1rem' } },
+                h('div', { className: 'font-mono', style: { fontSize: '11.5px', color: '#512B58', fontWeight: 600 } }, 'ROADMAP PROJECT: FLAGGO'),
+                h('p', { style: { fontSize: '0.9rem', color: '#231926', marginTop: '0.25rem' } }, bio.pitch)
+              ),
+              h('div', null,
+                h('div', { className: 'font-mono', style: { fontSize: '11.5px', color: '#4E5D63', marginBottom: '0.25rem' } }, 'CORE STACK'),
+                h('div', { className: 'font-mono', style: { fontSize: '12.5px', color: '#512B58' } }, bio.stack)
+              )
+            )
+          )
+        ) : null,
+
+        // --- LOG READER MODAL ---
+        readingPost ? h('div', { className: 'modal-backdrop', role: 'dialog', ariaModal: 'true', ariaLabel: readingPost.title },
+          h('div', { className: 'os-window', style: { width: '100%', maxWidth: '740px', maxHeight: '85vh', display: 'flex', flexDirection: 'column' } },
+            h('div', { className: 'os-titlebar os-titlebar-teal' },
+              h('span', null, `${readingPost.date} · ${(readingPost.tags || []).map(t => '#' + t).join(' / ')}`),
+              h('button', { type: 'button', onClick: () => setReadingPost(null), style: { color: '#FFFFFF', fontWeight: 700 } }, '[X]')
+            ),
+            h('div', { style: { padding: '2rem', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1.25rem' } },
+              h('h2', { className: 'font-display', style: { fontSize: '1.65rem', fontWeight: 700, color: '#512B58' } }, readingPost.title),
+              h('div', { style: { whiteSpace: 'pre-line', fontSize: '0.98rem', lineHeight: 1.7, color: '#231926' } }, readingPost.content),
+              h('div', { style: { display: 'flex', justifyContent: 'space-between', paddingTop: '1rem', borderTop: '1px solid rgba(42, 120, 134, 0.3)' } },
+                h('button', { type: 'button', onClick: () => downloadPostAsMarkdown(readingPost), className: 'os-btn' }, 'Download .md File'),
+                h('button', { type: 'button', onClick: () => setReadingPost(null), className: 'os-btn os-btn-primary' }, 'Close')
+              )
+            )
+          )
+        ) : null,
+
+        // --- PERSISTENT BOTTOM SCROLLING BAR (REAL GITHUB + GITEA STREAM) ---
+        h('footer', { className: 'commit-ticker-bar', ariaLabel: 'Latest GitHub and Gitea Commits' },
+          h('div', { className: 'commit-ticker-label' }, 'GIT STREAM'),
+          h('div', { className: 'commit-ticker-viewport' },
+            h('div', { className: 'commit-ticker-track' },
+              ...[...tickerItems, ...tickerItems].map((text, idx) =>
+                h('span', {
+                  key: idx,
+                  style: { display: 'inline-flex', alignItems: 'center', padding: '0 2.25rem', whiteSpace: 'nowrap' }
+                }, text)
+              )
+            )
+          ),
+          h('a', {
+            href: bio.githubUrl,
+            target: '_blank',
+            rel: 'noreferrer',
+            style: {
+              height: '100%',
+              padding: '0 0.7rem',
+              fontSize: '0.66rem',
+              backgroundColor: '#79BAC1',
+              color: '#512B58',
+              fontWeight: 600,
+              borderLeft: '1.5px solid #512B58',
+              display: 'inline-flex',
+              alignItems: 'center',
+              whiteSpace: 'nowrap'
+            }
+          }, '@xarop-pa-toss ↗')
+        )
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(React.createElement(App));
+  </script>
+</body>
+</html>

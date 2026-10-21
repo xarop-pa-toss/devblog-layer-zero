@@ -1,0 +1,1793 @@
+<!DOCTYPE html>
+<html lang="en" class="dark" translate="no">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="google" content="notranslate" />
+  <title>SIGNAL AUGMENTED — Filipe Vitorino</title>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <style>
+    /* Base Reset & Typography */
+    *, ::before, ::after { box-sizing: border-box; border-width: 0; border-style: solid; border-color: #374151; }
+    html, body { margin: 0; padding: 0; height: 100%; background-color: #030712; color: #f3f4f6; font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+    h1, h2, h3, h4, p { margin: 0; }
+    button, input, select { font-family: inherit; font-size: 100%; line-height: inherit; color: inherit; margin: 0; padding: 0; background-color: transparent; }
+    button, select { cursor: pointer; }
+    a { color: inherit; text-decoration: inherit; }
+    table { text-indent: 0; border-color: inherit; border-collapse: collapse; }
+    ::selection { background-color: rgba(59, 130, 246, 0.3); }
+
+    /* Layout & Flexbox */
+    .flex { display: flex; }
+    .inline-block { display: inline-block; }
+    .block { display: block; }
+    .hidden { display: none; }
+    .flex-col { flex-direction: column; }
+    .flex-1 { flex: 1 1 0%; }
+    .shrink-0 { flex-shrink: 0; }
+    .items-start { align-items: flex-start; }
+    .items-center { align-items: center; }
+    .items-end { align-items: flex-end; }
+    .justify-between { justify-content: space-between; }
+    .justify-center { justify-content: center; }
+
+    /* Grid */
+    .grid { display: grid; }
+    .grid-cols-1 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
+    .grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+    /* Positioning & Overflow */
+    .relative { position: relative; }
+    .absolute { position: absolute; }
+    .top-0 { top: 0px; }
+    .right-0 { right: 0px; }
+    .overflow-hidden { overflow: hidden; }
+    .overflow-x-auto { overflow-x: auto; }
+    .overflow-y-auto { overflow-y: auto; }
+
+    /* Sizing */
+    .h-screen { height: 100vh; }
+    .h-1\.5 { height: 0.375rem; }
+    .h-2 { height: 0.5rem; }
+    .h-6 { height: 1.5rem; }
+    .w-6 { width: 1.5rem; }
+    .w-8 { width: 2rem; }
+    .w-64 { width: 16rem; }
+    .w-full { width: 100%; }
+    .w-fit { width: fit-content; }
+    .max-w-2xl { max-width: 42rem; }
+    .max-w-5xl { max-width: 64rem; }
+
+    /* Spacing & Gaps */
+    .mx-auto { margin-left: auto; margin-right: auto; }
+    .mt-1 { margin-top: 0.25rem; }
+    .mt-2 { margin-top: 0.5rem; }
+    .mt-4 { margin-top: 1rem; }
+    .mt-6 { margin-top: 1.5rem; }
+    .mt-8 { margin-top: 2rem; }
+    .mb-1 { margin-bottom: 0.25rem; }
+    .mb-2 { margin-bottom: 0.5rem; }
+    .mb-3 { margin-bottom: 0.75rem; }
+    .mb-4 { margin-bottom: 1rem; }
+    .mr-2 { margin-right: 0.5rem; }
+    .p-1 { padding: 0.25rem; }
+    .p-1\.5 { padding: 0.375rem; }
+    .p-2 { padding: 0.5rem; }
+    .p-3 { padding: 0.75rem; }
+    .p-4 { padding: 1rem; }
+    .p-5 { padding: 1.25rem; }
+    .p-6 { padding: 1.5rem; }
+    .p-8 { padding: 2rem; }
+    .px-3 { padding-left: 0.75rem; padding-right: 0.75rem; }
+    .px-4 { padding-left: 1rem; padding-right: 1rem; }
+    .py-1 { padding-top: 0.25rem; padding-bottom: 0.25rem; }
+    .py-1\.5 { padding-top: 0.375rem; padding-bottom: 0.375rem; }
+    .py-2 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+    .py-2\.5 { padding-top: 0.625rem; padding-bottom: 0.625rem; }
+    .pb-4 { padding-bottom: 1rem; }
+    .pt-4 { padding-top: 1rem; }
+    .pt-6 { padding-top: 1.5rem; }
+    .pr-2 { padding-right: 0.5rem; }
+    .gap-1 { gap: 0.25rem; }
+    .gap-2 { gap: 0.5rem; }
+    .gap-3 { gap: 0.75rem; }
+    .gap-4 { gap: 1rem; }
+    .gap-6 { gap: 1.5rem; }
+    .space-y-1 > :not([hidden]) ~ :not([hidden]) { margin-top: 0.25rem; }
+    .space-y-4 > :not([hidden]) ~ :not([hidden]) { margin-top: 1rem; }
+    .space-y-6 > :not([hidden]) ~ :not([hidden]) { margin-top: 1.5rem; }
+
+    /* Typography */
+    .text-\[10px\] { font-size: 10px; }
+    .text-xs { font-size: 0.75rem; line-height: 1rem; }
+    .text-sm { font-size: 0.875rem; line-height: 1.25rem; }
+    .text-lg { font-size: 1.125rem; line-height: 1.75rem; }
+    .text-xl { font-size: 1.25rem; line-height: 1.75rem; }
+    .text-2xl { font-size: 1.5rem; line-height: 2rem; }
+    .text-3xl { font-size: 1.875rem; line-height: 2.25rem; }
+    .text-4xl { font-size: 2.25rem; line-height: 2.5rem; }
+    .font-normal { font-weight: 400; }
+    .font-medium { font-weight: 500; }
+    .font-semibold { font-weight: 600; }
+    .font-bold { font-weight: 700; }
+    .font-extrabold { font-weight: 800; }
+    .italic { font-style: italic; }
+    .uppercase { text-transform: uppercase; }
+    .leading-tight { line-height: 1.25; }
+    .tracking-wider { letter-spacing: 0.05em; }
+    .tracking-widest { letter-spacing: 0.1em; }
+    .text-left { text-align: left; }
+    .text-center { text-align: center; }
+    .truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    /* Gradient Text */
+    .bg-gradient-to-r { background-image: linear-gradient(to right, #60a5fa, #a855f7); }
+    .bg-clip-text { -webkit-background-clip: text; background-clip: text; }
+    .text-transparent { color: transparent; }
+
+    /* Backgrounds */
+    .bg-gray-950 { background-color: #030712; }
+    .bg-gray-900 { background-color: #111827; }
+    .bg-gray-900\/50 { background-color: rgba(17, 24, 39, 0.5); }
+    .bg-gray-800 { background-color: #1f2937; }
+    .bg-gray-800\/50 { background-color: rgba(31, 41, 55, 0.5); }
+    .bg-gray-700 { background-color: #374151; }
+    .bg-blue-900\/30 { background-color: rgba(30, 58, 138, 0.3); }
+    .bg-blue-900\/20 { background-color: rgba(30, 58, 138, 0.2); }
+    .bg-blue-600\/10 { background-color: rgba(37, 99, 235, 0.1); }
+    .bg-blue-600 { background-color: #2563eb; }
+    .bg-blue-500 { background-color: #3b82f6; }
+    .bg-green-900\/50 { background-color: rgba(20, 83, 45, 0.5); }
+    .bg-green-900\/30 { background-color: rgba(20, 83, 45, 0.3); }
+    .bg-green-900\/20 { background-color: rgba(20, 83, 45, 0.2); }
+    .bg-green-500 { background-color: #22c55e; }
+    .bg-yellow-900\/50 { background-color: rgba(113, 63, 18, 0.5); }
+    .bg-yellow-900\/30 { background-color: rgba(113, 63, 18, 0.3); }
+    .bg-purple-900\/50 { background-color: rgba(88, 28, 135, 0.5); }
+    .bg-purple-900\/20 { background-color: rgba(88, 28, 135, 0.2); }
+    .bg-purple-600 { background-color: #9333ea; }
+    .bg-purple-500 { background-color: #a855f7; }
+
+    /* Text Colors */
+    .text-white { color: #ffffff; }
+    .text-gray-100 { color: #f3f4f6; }
+    .text-gray-200 { color: #e5e7eb; }
+    .text-gray-300 { color: #d1d5db; }
+    .text-gray-400 { color: #9ca3af; }
+    .text-gray-500 { color: #6b7280; }
+    .text-blue-200 { color: #bfdbfe; }
+    .text-blue-400 { color: #60a5fa; }
+    .text-blue-500 { color: #3b82f6; }
+    .text-green-400 { color: #4ade80; }
+    .text-green-500 { color: #22c55e; }
+    .text-yellow-400 { color: #facc15; }
+    .text-yellow-500 { color: #eab308; }
+    .text-purple-400 { color: #c084fc; }
+
+    /* Borders & Rings */
+    .border { border-width: 1px; }
+    .border-b { border-bottom-width: 1px; }
+    .border-t { border-top-width: 1px; }
+    .border-r { border-right-width: 1px; }
+    .border-gray-800 { border-color: #1f2937; }
+    .border-gray-700 { border-color: #374151; }
+    .border-gray-700\/50 { border-color: rgba(55, 65, 81, 0.5); }
+    .border-blue-800 { border-color: #1e40af; }
+    .border-green-800 { border-color: #166534; }
+    .border-green-700 { border-color: #15803d; }
+    .border-yellow-800 { border-color: #854d0e; }
+    .border-yellow-700 { border-color: #a16207; }
+    .border-purple-700 { border-color: #7e22ce; }
+    .border-purple-500 { border-color: #a855f7; }
+    .ring-1 { box-shadow: 0 0 0 1px #a855f7; }
+
+    /* Border Radius */
+    .rounded { border-radius: 0.25rem; }
+    .rounded-md { border-radius: 0.375rem; }
+    .rounded-lg { border-radius: 0.5rem; }
+    .rounded-xl { border-radius: 0.75rem; }
+    .rounded-full { border-radius: 9999px; }
+    .rounded-bl-lg { border-bottom-left-radius: 0.5rem; }
+    .rounded-tr-lg { border-top-right-radius: 0.5rem; }
+
+    /* Effects & States */
+    .opacity-10 { opacity: 0.1; }
+    .opacity-80 { opacity: 0.8; }
+    .cursor-pointer { cursor: pointer; }
+    .cursor-not-allowed { cursor: not-allowed; }
+    .transition-colors { transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease; }
+    .transition-all { transition: all 0.2s ease; }
+    .hover\:bg-gray-800:hover { background-color: #1f2937; }
+    .hover\:bg-gray-800\/50:hover { background-color: rgba(31, 41, 55, 0.5); }
+    .hover\:bg-gray-600:hover { background-color: #4b5563; }
+    .hover\:bg-blue-700:hover { background-color: #1d4ed8; }
+    .hover\:bg-purple-700:hover { background-color: #7e22ce; }
+    .hover\:text-white:hover { color: #ffffff; }
+    .hover\:text-gray-200:hover { color: #e5e7eb; }
+    .hover\:text-yellow-400:hover { color: #facc15; }
+    .hover\:text-green-400:hover { color: #4ade80; }
+    .hover\:border-gray-500:hover { border-color: #6b7280; }
+    .focus\:outline-none:focus { outline: none; }
+    .focus\:border-blue-500:focus { border-color: #3b82f6; }
+
+    /* Select Dropdown Options in Dark Mode */
+    select option { background-color: #111827; color: #f3f4f6; }
+
+    /* Responsive Breakpoints */
+    @media (min-width: 640px) {
+      .sm\:flex-row { flex-direction: row; }
+      .sm\:items-center { align-items: center; }
+    }
+    @media (min-width: 768px) {
+      .md\:flex-row { flex-direction: row; }
+      .md\:items-center { align-items: center; }
+      .md\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .md\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .md\:grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    }
+    @media (min-width: 1024px) {
+      .lg\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .lg\:grid-cols-6 { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+    }
+  </style>
+</head>
+<body class="notranslate" translate="no">
+  <div id="root"></div>
+
+  <script>
+    const { useState, useEffect, useMemo } = React;
+    const h = React.createElement;
+
+    // --- SAFE LOCALSTORAGE HELPER ---
+    function safeGet(key, fallback) {
+      try {
+        const raw = localStorage.getItem(key);
+        if (!raw) return fallback;
+        const parsed = JSON.parse(raw);
+        return parsed !== null && parsed !== undefined ? parsed : fallback;
+      } catch (e) {
+        return fallback;
+      }
+    }
+
+    function safeSet(key, val) {
+      try {
+        localStorage.setItem(key, JSON.stringify(val));
+      } catch (e) {}
+    }
+
+    // --- SVG ICONS (No external library or Babel needed) ---
+    const IconWrapper = ({ size = 20, className = "", children }) =>
+      h('svg', {
+        xmlns: "http://www.w3.org/2000/svg",
+        width: size,
+        height: size,
+        viewBox: "0 0 24 24",
+        fill: "none",
+        stroke: "currentColor",
+        strokeWidth: "2",
+        strokeLinecap: "round",
+        strokeLinejoin: "round",
+        className
+      }, ...children);
+
+    const LayoutDashboard = (p) => IconWrapper({ ...p, children: [
+      h('rect', { key: 1, width: 7, height: 9, x: 3, y: 3, rx: 1 }),
+      h('rect', { key: 2, width: 7, height: 5, x: 14, y: 3, rx: 1 }),
+      h('rect', { key: 3, width: 7, height: 9, x: 14, y: 12, rx: 1 }),
+      h('rect', { key: 4, width: 7, height: 5, x: 3, y: 16, rx: 1 })
+    ]});
+
+    const MapIcon = (p) => IconWrapper({ ...p, children: [
+      h('path', { key: 1, d: "M14.106 5.553a2 2 0 0 0 1.788 0l3.659-1.83A1 1 0 0 1 21 4.619v12.764a1 1 0 0 1-.553.894l-4.553 2.277a2 2 0 0 1-1.788 0l-4.212-2.106a2 2 0 0 0-1.788 0l-3.659 1.83A1 1 0 0 1 3 19.381V6.618a1 1 0 0 1 .553-.894l4.553-2.277a2 2 0 0 1 1.788 0z" }),
+      h('path', { key: 2, d: "M15 5.764v15" }),
+      h('path', { key: 3, d: "M9 3.236v15" })
+    ]});
+
+    const CheckCircle2 = (p) => IconWrapper({ ...p, children: [
+      h('circle', { key: 1, cx: 12, cy: 12, r: 10 }),
+      h('path', { key: 2, d: "m9 12 2 2 4-4" })
+    ]});
+
+    const GitBranch = (p) => IconWrapper({ ...p, children: [
+      h('line', { key: 1, x1: 6, x2: 6, y1: 3, y2: 15 }),
+      h('circle', { key: 2, cx: 18, cy: 6, r: 3 }),
+      h('circle', { key: 3, cx: 6, cy: 18, r: 3 }),
+      h('path', { key: 4, d: "M18 9a9 9 0 0 1-9 9" })
+    ]});
+
+    const Briefcase = (p) => IconWrapper({ ...p, children: [
+      h('path', { key: 1, d: "M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" }),
+      h('rect', { key: 2, width: 20, height: 14, x: 2, y: 6, rx: 2 })
+    ]});
+
+    const FolderOpen = (p) => IconWrapper({ ...p, children: [
+      h('path', { key: 1, d: "m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2" })
+    ]});
+
+    const Settings = (p) => IconWrapper({ ...p, children: [
+      h('path', { key: 1, d: "M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" }),
+      h('circle', { key: 2, cx: 12, cy: 12, r: 3 })
+    ]});
+
+    const AlertCircle = (p) => IconWrapper({ ...p, children: [
+      h('circle', { key: 1, cx: 12, cy: 12, r: 10 }),
+      h('line', { key: 2, x1: 12, x2: 12, y1: 8, y2: 12 }),
+      h('line', { key: 3, x1: 12, x2: 12.01, y1: 16, y2: 16 })
+    ]});
+
+    const Download = (p) => IconWrapper({ ...p, children: [
+      h('path', { key: 1, d: "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" }),
+      h('polyline', { key: 2, points: "7 10 12 15 17 10" }),
+      h('line', { key: 3, x1: 12, x2: 12, y1: 15, y2: 3 })
+    ]});
+
+    const Upload = (p) => IconWrapper({ ...p, children: [
+      h('path', { key: 1, d: "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" }),
+      h('polyline', { key: 2, points: "17 8 12 3 7 8" }),
+      h('line', { key: 3, x1: 12, x2: 12, y1: 3, y2: 15 })
+    ]});
+
+    const ShieldCheck = (p) => IconWrapper({ ...p, children: [
+      h('path', { key: 1, d: "M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" }),
+      h('path', { key: 2, d: "m9 12 2 2 4-4" })
+    ]});
+
+    const BrainCircuit = (p) => IconWrapper({ ...p, children: [
+      h('path', { key: 1, d: "M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z" }),
+      h('path', { key: 2, d: "M9 13a4.5 4.5 0 0 0 3-4" }),
+      h('path', { key: 3, d: "M6.003 5.125A3 3 0 0 0 6.401 6.5" }),
+      h('path', { key: 4, d: "M3.477 10.896a4 4 0 0 1 .585-.396" }),
+      h('path', { key: 5, d: "M6 18a4 4 0 0 1-1.967-.516" }),
+      h('path', { key: 6, d: "M12 13h4" }),
+      h('path', { key: 7, d: "M12 18h6a2 2 0 0 1 2 2v1" }),
+      h('path', { key: 8, d: "M12 8h8" }),
+      h('path', { key: 9, d: "M16 8V5a2 2 0 0 1 2-2" }),
+      h('circle', { key: 10, cx: 16, cy: 13, r: 0.5 }),
+      h('circle', { key: 11, cx: 18, cy: 3, r: 0.5 }),
+      h('circle', { key: 12, cx: 20, cy: 21, r: 0.5 }),
+      h('circle', { key: 13, cx: 20, cy: 8, r: 0.5 })
+    ]});
+
+    const CircleDashed = (p) => IconWrapper({ ...p, children: [
+      h('path', { key: 1, d: "M10.1 2.182a10 10 0 0 1 3.8 0" }),
+      h('path', { key: 2, d: "M13.9 21.818a10 10 0 0 1-3.8 0" }),
+      h('path', { key: 3, d: "M17.609 3.721a10 10 0 0 1 2.69 2.7" }),
+      h('path', { key: 4, d: "M2.182 13.9a10 10 0 0 1 0-3.8" }),
+      h('path', { key: 5, d: "M20.279 17.609a10 10 0 0 1-2.7 2.69" }),
+      h('path', { key: 6, d: "M21.818 10.1a10 10 0 0 1 0 3.8" }),
+      h('path', { key: 7, d: "M3.721 6.391a10 10 0 0 1 2.7-2.69" }),
+      h('path', { key: 8, d: "M6.391 20.279a10 10 0 0 1-2.69-2.7" })
+    ]});
+
+    const ExternalLink = (p) => IconWrapper({ ...p, children: [
+      h('path', { key: 1, d: "M15 3h6v6" }),
+      h('path', { key: 2, d: "M10 14 21 3" }),
+      h('path', { key: 3, d: "M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" })
+    ]});
+
+    const Target = (p) => IconWrapper({ ...p, children: [
+      h('circle', { key: 1, cx: 12, cy: 12, r: 10 }),
+      h('circle', { key: 2, cx: 12, cy: 12, r: 6 }),
+      h('circle', { key: 3, cx: 12, cy: 12, r: 2 })
+    ]});
+
+    // --- STATIC DATA FROM PDF ---
+    const ROADMAP_DATA = [
+      {
+        id: 'w0',
+        title: 'Week 0: Baseline & Public Launch',
+        focus: 'Measure learning velocity, establish public source of truth.',
+        tasks: [
+          { id: 'w0_1', text: 'Confirm workload and Czech/EU work-right facts' },
+          { id: 'w0_2', text: 'Clean GitHub profile; pin best existing work' },
+          { id: 'w0_3', text: 'Create public reinvention README (skills, target lanes, lab rules)' },
+          { id: 'w0_4', text: 'Join Azure + Prague technical communities (Meetup, Discord)' },
+          { id: 'w0_5', text: 'Apply to 15-20 current infrastructure roles (Cohort A)' }
+        ],
+        gate: { id: 'g0', name: 'Calibrate & Launch', criteria: 'One canonical profile another engineer can understand in <3 minutes.' }
+      },
+      {
+        id: 'w1_2',
+        title: 'Weeks 1-2: Linux, Git & Scripting',
+        focus: 'Live in Linux. Systemd, journalctl, permissions, SSH, networking, processes. Git on every artifact.',
+        tasks: [
+          { id: 'w1_1', text: 'Publish linux-incident-lab v0.1 with 2-3 faults' },
+          { id: 'w1_2', text: 'Document evidence trail and postmortem (no screenshot-only repos)' },
+          { id: 'w1_3', text: 'Post narrow technical question/review request (r/sysadmin, Discord)' },
+          { id: 'w1_4', text: 'Make one useful outward contribution (reproduce issue/docs)' },
+          { id: 'w1_5', text: 'Contact 5 relevant practitioners/recruiters' }
+        ],
+        gate: { id: 'g1', name: 'Linux/Git Gate', criteria: 'Pass unseen Linux incident test: receive external correction, respond with fix/explanation.' }
+      },
+      {
+        id: 'w3_4',
+        title: 'Weeks 3-4: Azure & Network Translation',
+        focus: 'Translate AD/networking knowledge to Entra/RBAC/VNet/NSG/DNS.',
+        tasks: [
+          { id: 'w3_1', text: 'Build Azure environment and publish architecture notes' },
+          { id: 'w3_2', text: 'Run public review: ask one narrowly framed Azure question after attempt' },
+          { id: 'w3_3', text: 'Begin bridge-role cohort applications (Cohort B)' },
+          { id: 'w3_4', text: 'Run one lateral micro-experiment (IAM or Ansible)' }
+        ],
+        gate: { id: 'g2', name: 'Cloud Translation Gate', criteria: 'Explain and repair a broken dependency; project is reproducible by another person.' }
+      },
+      {
+        id: 'w5_6',
+        title: 'Weeks 5-6: Terraform & Lateral Probes',
+        focus: 'Move infrastructure to Terraform; destroy/rebuild/change topology.',
+        tasks: [
+          { id: 'w5_1', text: 'Publish azure-terraform-foundation (VNet/VM/identity/monitoring)' },
+          { id: 'w5_2', text: 'Ensure variables/outputs used, no secrets, destroy instructions included' },
+          { id: 'w5_3', text: 'Run identity/Graph probe OR infrastructure-automation probe' },
+          { id: 'w5_4', text: 'Choose specialization branch based on transfer speed + interest + market pull' }
+        ],
+        gate: { id: 'g3', name: 'Branch Gate', criteria: 'Recreate from repo and explicitly choose branch (CloudOps, IAM, or DevOps).' }
+      },
+      {
+        id: 'w7_8',
+        title: 'Weeks 7-8: Docker, CI/CD & Contribution',
+        focus: 'Containerize a small service; test/build/deploy/verify.',
+        tasks: [
+          { id: 'w7_1', text: 'Publish cloud-service-delivery (Dockerfile, GitHub Actions/Azure Pipeline)' },
+          { id: 'w7_2', text: 'Include health checks, tests, deployment and rollback notes' },
+          { id: 'w7_3', text: 'Submit at least one useful issue/PR to a tool used in the lab' },
+          { id: 'w7_4', text: 'Expand rebranded application cohorts if gates passed' }
+        ],
+        gate: { id: 'g4', name: 'Clean-Environment Gate', criteria: 'Clean-machine deployment plus one broken-pipeline incident repaired independently.' }
+      },
+      {
+        id: 'w9_10',
+        title: 'Weeks 9-10: Observability & Public Operations',
+        focus: 'Metrics/logs/alerts, runbooks, failure injection and postmortems.',
+        tasks: [
+          { id: 'w9_1', text: 'Add observability lab (Metrics/logs/alerts, dashboards)' },
+          { id: 'w9_2', text: 'Execute failure injection and write postmortem' },
+          { id: 'w9_3', text: "Answer other people's technical questions where qualified" },
+          { id: 'w9_4', text: 'Build Czech practitioner graph (follow organizers/speakers)' }
+        ],
+        gate: { id: 'g5', name: 'Observability Gate', criteria: 'Diagnose from telemetry and demonstrate reciprocal community participation.' }
+      },
+      {
+        id: 'w11_12',
+        title: 'Weeks 11-12: Specialization & Market Conversion',
+        focus: 'Deepen chosen branch; capstone; mock incidents; rewrite positioning.',
+        tasks: [
+          { id: 'w11_1', text: 'Integrate capstone: Infrastructure + Delivery + Monitoring + Identity' },
+          { id: 'w11_2', text: 'Publish a public project walkthrough' },
+          { id: 'w11_3', text: 'Rewrite Resume/LinkedIn around the new truthful identity' },
+          { id: 'w11_4', text: 'Targeted Czech/EU outreach; compare conversion by cohort' }
+        ],
+        gate: { id: 'g6', name: 'Market Gate', criteria: 'Technical + market gate pass: project survives scrutiny, applications generate broader conversations.' }
+      }
+    ];
+
+    const ASSESSMENTS = [
+      { id: 'linux', name: 'Linux Operations' },
+      { id: 'git', name: 'Git & Version Control' },
+      { id: 'scripting', name: 'Bash / PowerShell' },
+      { id: 'azure', name: 'Azure Foundations' },
+      { id: 'networking', name: 'Cloud Networking' },
+      { id: 'terraform', name: 'Terraform / IaC' },
+      { id: 'docker', name: 'Docker / Containers' },
+      { id: 'cicd', name: 'CI/CD Pipelines' },
+      { id: 'observability', name: 'Observability & Monitoring' }
+    ];
+
+    // COMPETENCY_EVIDENCE — audited LemonDrop competency evidence (static audit finding).
+    // Mirrors the audited three-axis evidence per competency: project evidence,
+    // AI-assisted execution, independently tested — provider-separated so an AWS
+    // artefact can never be read as satisfying an Azure assessment.
+    // Read-only audit context, NOT user progress: D1 (assessment_grade) is
+    // authoritative for user progress; this constant is the static audit finding
+    // and sa_assessments is only the client cache of approved D1 state.
+    const COMPETENCY_EVIDENCE = [
+      { id: 'linux', provider: 'other',
+        project_evidence: { value: true, ref: 'scripts/*.sh', note: 'Shell automation present in the project.' },
+        ai_assisted: { value: true, note: 'LIKELY — core implementation; circumstantial basis only.' },
+        independent: { value: false, note: 'NOT DEMONSTRATED — no second party has followed the runbook.' } },
+      { id: 'git', provider: 'other',
+        project_evidence: { value: true, ref: 'Git history on every artefact', note: 'Git used across project artefacts.' },
+        ai_assisted: { value: true, note: 'LIKELY — core implementation; circumstantial basis only.' },
+        independent: { value: false, note: 'NOT DEMONSTRATED — no second party has followed the runbook.' } },
+      { id: 'scripting', provider: 'other',
+        project_evidence: { value: true, ref: 'scripts/*.sh', note: 'Bash/PowerShell scripts present in the project.' },
+        ai_assisted: { value: true, note: 'LIKELY — core implementation; circumstantial basis only.' },
+        independent: { value: false, note: 'NOT DEMONSTRATED — no second party has followed the runbook.' } },
+      { id: 'azure', provider: 'azure',
+        project_evidence: { value: false, ref: 'none — no Azure artefact exists in the project', note: 'No Azure artefact exists in the project.' },
+        ai_assisted: { value: false, note: 'NOT FOUND — no evidence of AI-assisted execution for this competency.' },
+        independent: { value: false, note: 'NOT DEMONSTRATED — no second party has followed the runbook.' } },
+      { id: 'networking', provider: 'aws',
+        project_evidence: { value: true, ref: 'infra/*.tf', note: 'Network topology defined in Terraform (AWS-scoped artefacts present).' },
+        ai_assisted: { value: true, note: 'LIKELY — core implementation; circumstantial basis only.' },
+        independent: { value: false, note: 'NOT DEMONSTRATED — no second party has followed the runbook.' } },
+      { id: 'terraform', provider: 'aws',
+        project_evidence: { value: true, ref: 'infra/*.tf', note: 'Terraform IaC artefacts present in the project.' },
+        ai_assisted: { value: true, note: 'LIKELY — core implementation; circumstantial basis only.' },
+        independent: { value: false, note: 'NOT DEMONSTRATED — no second party has followed the runbook.' } },
+      { id: 'docker', provider: 'other',
+        project_evidence: { value: true, ref: 'Dockerfile / container artefacts', note: 'Container build artefacts present in the project.' },
+        ai_assisted: { value: true, note: 'LIKELY — core implementation; circumstantial basis only.' },
+        independent: { value: false, note: 'NOT DEMONSTRATED — no second party has followed the runbook.' } },
+      { id: 'cicd', provider: 'other',
+        project_evidence: { value: true, ref: '.github/workflows/*', note: 'CI/CD workflow files present in the project.' },
+        ai_assisted: { value: true, note: 'LIKELY — core implementation; circumstantial basis only.' },
+        independent: { value: false, note: 'NOT DEMONSTRATED — no second party has followed the runbook.' } },
+      { id: 'observability', provider: 'other',
+        project_evidence: { value: true, ref: 'health probes, log rotation, DB log export', note: 'Instrumentation exists (health probes, log rotation, DB log export) but no alerting or dashboards.' },
+        ai_assisted: { value: true, note: 'LIKELY — core implementation; circumstantial basis only.' },
+        independent: { value: false, note: 'NOT DEMONSTRATED — no second party has followed the runbook.' } },
+    ];
+
+    const T_GATES = [
+      { id: 't0', name: 'T0 Baseline', desc: 'Separates prior knowledge from learning speed.' },
+      { id: 't1', name: 'T1 First Solution', desc: 'Time to functional solution & hints required.' },
+      { id: 't2', name: 'T2 Transfer', desc: 'Structurally similar but non-identical task.' },
+      { id: 't3', name: 'T3 Adversarial', desc: 'Inject edge case or misleading symptom.' },
+      { id: 't4', name: 'T4 Explanation', desc: 'Written postmortem (hypothesis, fix, prevention).' }
+    ];
+
+    const BRANCHES = [
+      {
+        id: 'A',
+        name: 'Path A: Cloud Infrastructure / CloudOps',
+        type: 'Default',
+        target: 'Infrastructure & Cloud Operations / Junior Cloud Infrastructure Engineer',
+        core: 'Linux, Azure, networking, Terraform, Git, Bash/PowerShell, Docker, CI/CD, monitoring.',
+        reason: 'Maximizes transfer from Windows Server, AD, Fortinet, Veeam.'
+      },
+      {
+        id: 'B',
+        name: 'Path B: Cloud Identity / IAM Automation',
+        type: 'High-leverage lateral',
+        target: 'Junior Identity & Access Engineer / Cloud Identity Engineer',
+        core: 'Entra ID, M365, RBAC, MFA/CA, PowerShell, Microsoft Graph, OAuth/OIDC/SAML/SCIM.',
+        reason: 'Deepens work Filipe already performs instead of learning unrelated discipline.'
+      },
+      {
+        id: 'C',
+        name: 'Path C: DevOps / Platform',
+        type: 'Higher ceiling (Conditional)',
+        target: 'Junior DevOps / Platform Operations (Only if core mastered quickly)',
+        core: 'Stronger Python, Docker, CI/CD, Terraform, Kubernetes basics, application lifecycle.',
+        reason: 'Requires most software-delivery depth. Easiest place to overclaim.'
+      }
+    ];
+
+    const PORTFOLIO_PROJECTS = [
+      { id: 'p1', name: 'linux-incident-lab', proof: 'Linux ops + troubleshooting' },
+      { id: 'p2', name: 'azure-terraform-foundation', proof: 'Cloud + networking + IaC' },
+      { id: 'p3', name: 'cloud-service-delivery', proof: 'Docker + CI/CD' },
+      { id: 'p4', name: 'identity-automation-lab OR observability-lab', proof: 'Branch Specialization' }
+    ];
+
+    const SIGNALS = [
+      { id: 's1', name: '1. Source-of-truth', channel: 'GitHub (Readme, Code, Notes)' },
+      { id: 's2', name: '2. Peer-review', channel: 'Reddit/Discord/Q&A' },
+      { id: 's3', name: '3. Reciprocal', channel: 'Community replies/PRs' },
+      { id: 's4', name: '4. Professional', channel: 'LinkedIn/Write-up' },
+      { id: 's5', name: '5. Network', channel: 'Direct outreach' },
+      { id: 's6', name: '6. Market', channel: 'Targeted application' }
+    ];
+
+    const COHORTS = [
+      { id: 'c_A', name: 'A: Current Infrastructure', titles: 'Infra Support, Jr Sysadmin, M365/Entra Support', target: 20 },
+      { id: 'c_B', name: 'B: Systems/Cloud Bridge', titles: 'Assoc Systems Eng, Cloud Support, Jr CloudOps', target: 20 },
+      { id: 'c_C', name: 'C: IAM/Identity', titles: 'Jr IAM Eng, Identity Ops (Run when Graph/Entra real)', target: 15 },
+      { id: 'c_D', name: 'D: Jr DevOps Stretch', titles: 'Jr DevOps (Only after delivery/IaC gates pass)', target: 10 }
+    ];
+
+    const STATUS = {
+      PENDING: 'pending',
+      AI_ASSISTED: 'ai_assisted',
+      INDEPENDENT: 'independent'
+    };
+
+    function StatusIcon({ status, size = 20 }) {
+      if (status === STATUS.INDEPENDENT) return h(ShieldCheck, { size, className: "text-green-500" });
+      if (status === STATUS.AI_ASSISTED) return h(BrainCircuit, { size, className: "text-yellow-500" });
+      return h(CircleDashed, { size, className: "text-gray-500" });
+    }
+
+    function StatusSelector({ status, onChange }) {
+      return h('div', { className: "flex bg-gray-900 rounded-lg p-1 border border-gray-700" },
+        h('button', {
+          type: 'button',
+          onClick: () => onChange(STATUS.PENDING),
+          className: `px-3 py-1 text-xs rounded-md font-medium transition-colors ${!status || status === STATUS.PENDING ? 'bg-gray-700 text-white' : 'text-gray-400 hover:text-white'}`
+        }, 'Pending'),
+        h('button', {
+          type: 'button',
+          onClick: () => onChange(STATUS.AI_ASSISTED),
+          className: `px-3 py-1 text-xs rounded-md font-medium transition-colors flex items-center gap-1 ${status === STATUS.AI_ASSISTED ? 'bg-yellow-900/50 text-yellow-400 border border-yellow-700' : 'text-gray-400 hover:text-yellow-400'}`
+        }, h(BrainCircuit, { size: 12 }), ' AI Assisted'),
+        h('button', {
+          type: 'button',
+          onClick: () => onChange(STATUS.INDEPENDENT),
+          className: `px-3 py-1 text-xs rounded-md font-medium transition-colors flex items-center gap-1 ${status === STATUS.INDEPENDENT ? 'bg-green-900/50 text-green-400 border border-green-700' : 'text-gray-400 hover:text-green-400'}`
+        }, h(ShieldCheck, { size: 12 }), ' Independent')
+      );
+    }
+
+    /**
+     * fetchAuthoritativeState() -> Promise<object>
+     *   Contract (input): takes no arguments; requires a same-origin serving context so the
+     *     operator session cookie is eligible to be sent.
+     *   Contract (output, success): resolves with the parsed JSON body of any 2xx response from
+     *     GET /agent/state (shape is server-defined; treated as opaque read-only display data).
+     *   Contract (output, error): rejects with Error for every failure mode:
+     *       * HTTP 401/403/4xx/5xx -> Error(`authoritative state unavailable: ${status}`)
+     *       * network failure / invalid JSON -> the underlying fetch() or json() Error
+     *     The caller treats rejection as "unavailable" and falls back to local state.
+     *   Pre-condition: none beyond the same-origin serving context.
+     *   Post-condition: no localStorage key is read or written; no grade state is created,
+     *     overwritten, or re-based client-side; only the six existing sa_* keys may ever be
+     *     written (by the existing safeSet effects in App).
+     *   Invariant: read-only and idempotent; never mutates client state; never stores
+     *     server-derived grades in localStorage.
+     *   Side effect: performs exactly one network GET to /agent/state with
+     *     credentials: 'same-origin' (session cookie sent for same-origin responses only).
+     *   Testability: named module-level function; drive it directly in tests with a fetch mock
+     *     (resolve 200 JSON, resolve non-ok Response, or reject).
+     */
+    async function fetchAuthoritativeState() {
+      // MECHANICAL: credentials: 'same-origin' attaches the operator session cookie only to
+      // same-origin responses; any cross-origin redirect drops the cookie (intended).
+      const res = await fetch('/agent/state', { credentials: 'same-origin' });
+      if (!res.ok) throw new Error(`authoritative state unavailable: ${res.status}`);
+      return await res.json();
+    }
+
+    // --- OPERATOR SERVER FETCHES (settings tab + dashboard badge) ---
+    // Every request uses credentials: 'same-origin' so the HttpOnly sid cookie
+    // travels to same-origin endpoints only; this client never reads sid.
+
+    /**
+     * ApiError -> Error
+     *   input: message - string; status - HTTP status number (0 = network /
+     *     parse failure sentinel).
+     *   output: an Error instance carrying .status and .name = 'ApiError';
+     *     callers match on err.status for 401 / 403 / 404 / 409 / 429 / 503.
+     *   Pre-condition: none. Post-condition: pure value object; no side effects.
+     *   Invariant: status is always a number.
+     *   Side effect: none.
+     */
+    class ApiError extends Error {
+      constructor(message, status) {
+        super(message);
+        this.name = 'ApiError';
+        this.status = status;
+      }
+    }
+
+    /**
+     * fetchJson(path, init) -> Promise<object | null>
+     *   input: path - same-origin URL string; init - optional { method?, body? }
+     *     where body is a JS object serialized as JSON (only for non-GET
+     *     methods; fetch() rejects bodies on GET/HEAD).
+     *   output success: parsed JSON body of any 2xx response (may be null for
+     *     empty 2xx bodies). output error: rejects with ApiError(message,
+     *     status); status is the HTTP status (401, 403, 404, 409, 429, 503,
+     *     ...) or 0 for network failure / invalid JSON.
+     *   Pre-condition: same-origin serving context so the session cookie is
+     *     eligible to be sent. Post-condition: no localStorage key read or
+     *     written; the HttpOnly session cookie is never read by JS; client
+     *     state is never created, overwritten, or re-based from this call.
+     *   Invariant: exactly one network fetch per call; credentials:
+     *     'same-origin' (the cookie is dropped on any cross-origin redirect).
+     *   Side effect: one network request; on success returns server data for
+     *     read-only display only.
+     */
+    async function fetchJson(path, init = {}) {
+      const opts = { credentials: 'same-origin', ...init };
+      if (init.body && opts.method !== 'GET' && opts.method !== 'HEAD') {
+        // MECHANICAL: fetch() throws when a body is attached to GET/HEAD, so
+        // bodies are stringified and attached only for mutating methods.
+        opts.headers = { 'Content-Type': 'application/json', ...(init.headers || {}) };
+        opts.body = JSON.stringify(init.body);
+      }
+      let data = null;
+      try {
+        const res = await fetch(path, opts);
+        try { data = await res.json(); } catch { data = null; }
+        if (!res.ok) throw new ApiError(`server responded ${res.status}`, res.status);
+        return data;
+      } catch (err) {
+        if (err instanceof ApiError) throw err;
+        // MECHANICAL: network failure or unparsable body -> status 0 sentinel;
+        // the caller renders a visible message and keeps the tab usable.
+        throw new ApiError(String(err && err.message ? err.message : err), 0);
+      }
+    }
+
+    /**
+     * providerBadgeClass(provider) -> string
+     *   input: provider - one of 'aws' | 'azure' | 'other' (matches COMPETENCY_EVIDENCE entries).
+     *   output: space-separated utility classes (all defined at index.html L10-233) for a provider
+     *     pill: AWS = yellow/orange, Azure = blue, other = gray.
+     *   Pre-condition: provider is a member of the allowed set.
+     *   Post-condition: pure; identical input yields identical output.
+     *   Side effect: none.
+     *   Invariant: AWS and Azure never share a pill colour, so provider separation is visually
+     *     enforced — an AWS artefact can never be read as Azure-backed evidence.
+     */
+    function providerBadgeClass(provider) {
+      if (provider === 'aws') return 'bg-yellow-900/20 border-yellow-800 text-yellow-400';
+      if (provider === 'azure') return 'bg-blue-900/20 border-blue-800 text-blue-400';
+      return 'bg-gray-800 border-gray-700 text-gray-400';
+    }
+
+    /**
+     * providerLabel(provider) -> string
+     *   input: provider - one of 'aws' | 'azure' | 'other'.
+     *   output: 'AWS' | 'Azure' | 'other' — display text for the provider pill.
+     *   Pre-condition: provider is a member of the allowed set.
+     *   Post-condition: pure; total over the allowed set.
+     *   Side effect: none.
+     */
+    function providerLabel(provider) {
+      if (provider === 'aws') return 'AWS';
+      if (provider === 'azure') return 'Azure';
+      return 'other';
+    }
+
+    function App() {
+      const [activeTab, setActiveTab] = useState('dashboard');
+      const [tasks, setTasks] = useState(() => safeGet('sa_tasks', {}));
+      const [gates, setGates] = useState(() => safeGet('sa_gates', {}));
+      const [assessments, setAssessments] = useState(() => {
+        const defaultAssessments = {};
+        ['terraform', 'docker', 'cicd', 'scripting', 'linux'].forEach(skill => {
+          defaultAssessments[`${skill}_t0`] = STATUS.INDEPENDENT;
+          defaultAssessments[`${skill}_t1`] = STATUS.AI_ASSISTED;
+        });
+        return safeGet('sa_assessments', defaultAssessments);
+      });
+      const [branch, setBranch] = useState(() => safeGet('sa_branch', null));
+      const [portfolio, setPortfolio] = useState(() => safeGet('sa_portfolio', {}));
+      const [applications, setApplications] = useState(() => {
+        const defaultApps = {};
+        COHORTS.forEach(c => { defaultApps[c.id] = { applied: 0, screens: 0, tech: 0, rejections: 0 }; });
+        return safeGet('sa_applications', defaultApps);
+      });
+
+      useEffect(() => safeSet('sa_tasks', tasks), [tasks]);
+      useEffect(() => safeSet('sa_gates', gates), [gates]);
+      useEffect(() => safeSet('sa_assessments', assessments), [assessments]);
+      useEffect(() => safeSet('sa_branch', branch), [branch]);
+      useEffect(() => safeSet('sa_portfolio', portfolio), [portfolio]);
+      useEffect(() => safeSet('sa_applications', applications), [applications]);
+
+      const [authoritativeState, setAuthoritativeState] = useState(null);
+
+      // --- OPERATOR SESSION STATE (settings tab) ---
+      const [operatorSignedIn, setOperatorSignedIn] = useState(false);
+      const [signInPassword, setSignInPassword] = useState('');
+      const [signInError, setSignInError] = useState(null);
+      const [signingIn, setSigningIn] = useState(false);
+      const [pendingProposals, setPendingProposals] = useState([]);
+      const [proposalsError, setProposalsError] = useState(null);
+      const [decidingProposal, setDecidingProposal] = useState(null);
+      const [migrationPreview, setMigrationPreview] = useState(null);
+      const [migrationError, setMigrationError] = useState(null);
+      const [migrationLoading, setMigrationLoading] = useState(false);
+      const [migrating, setMigrating] = useState(false);
+      const [migrationResult, setMigrationResult] = useState(null);
+      const [dashboardPendingCount, setDashboardPendingCount] = useState(null);
+
+      // refreshAuthoritativeState() -> Promise<void>
+      //   input: none. Fetches GET /agent/state with the session cookie and
+      //     reconciles the client branch state with the D1 authoritative value.
+      //   output success: authoritativeState updated; if D1 holds a snapshot,
+      //     branch is overwritten with the snapshot's sa_branch (null when the
+      //     key is absent), so the UI always reflects the approved branch.
+      //   output error: swallowed; the UI keeps its current local branch state
+      //     and continues to work (no blanking on 401/network failure).
+      //   Pre-condition: none. Post-condition: no localStorage write here — the
+      //     existing safeSet effect persists any branch change made by setBranch.
+      //   Side effect: one GET /agent/state; one setState for authoritativeState
+      //     and optionally one setBranch when a snapshot exists.
+      async function refreshAuthoritativeState() {
+        try {
+          const data = await fetchAuthoritativeState();
+          setAuthoritativeState(data);
+          if (data && data.snapshot_version !== null && data.branch !== undefined) {
+            setBranch(data.branch);
+          }
+        } catch (err) {
+          // 401 / 403 / network failure: fall back to local state.
+          console.debug('[state] authoritative refresh unavailable:', String(err));
+        }
+      }
+
+      // Fetch the operator's authoritative progress from D1 (read-only, non-blocking).
+      // On 401/403/network failure the tab renders normally from local state; it never breaks or blanks.
+      useEffect(() => {
+        refreshAuthoritativeState();
+      }, []);
+
+      // Load pending proposals on mount. A 200 from GET /agent/proposals
+      // confirms a live operator session (session cookie stored by the
+      // browser); a 401 means signed out. Any failure leaves the tab usable.
+      useEffect(() => {
+        loadPendingProposals();
+      }, []);
+
+      // (Re)load the migration preview whenever a live operator session exists.
+      // Runs once on mount after loadPendingProposals confirms the session
+      // cookie (operatorSignedIn flips to true), and again after sign-in.
+      // Read-only and idempotent; gated on operatorSignedIn so anonymous
+      // visitors never request it and the operator sees the preview without
+      // re-signing in.
+      useEffect(() => {
+        if (!operatorSignedIn) return;
+        loadMigrationPreview();
+      }, [operatorSignedIn]);
+
+      const progressStats = useMemo(() => {
+        let totalTasks = 0;
+        let independentTasks = 0;
+        let aiTasks = 0;
+        ROADMAP_DATA.forEach(week => {
+          week.tasks.forEach(task => {
+            totalTasks++;
+            if (tasks[task.id] === STATUS.INDEPENDENT) independentTasks++;
+            if (tasks[task.id] === STATUS.AI_ASSISTED) aiTasks++;
+          });
+        });
+        const totalGates = ROADMAP_DATA.length;
+        const passedGates = Object.values(gates || {}).filter(v => v === STATUS.INDEPENDENT).length;
+        return {
+          totalTasks,
+          independentTasks,
+          aiTasks,
+          pendingTasks: totalTasks - independentTasks - aiTasks,
+          completionPercent: Math.round((independentTasks / totalTasks) * 100) || 0,
+          totalGates,
+          passedGates
+        };
+      }, [tasks, gates]);
+
+      const handleTaskStatus = (id, newStatus) => setTasks(prev => ({ ...prev, [id]: newStatus }));
+      const handleGateStatus = (id, newStatus) => setGates(prev => ({ ...prev, [id]: newStatus }));
+      const handleAssessment = (skillId, gateId, status) => setAssessments(prev => ({ ...prev, [`${skillId}_${gateId}`]: status }));
+      const handlePortfolioSignal = (projectId, signalId, value) => setPortfolio(prev => ({ ...prev, [`${projectId}_${signalId}`]: value }));
+      const handlePortfolioLink = (projectId, link) => setPortfolio(prev => ({ ...prev, [`${projectId}_link`]: link }));
+      const handleAppChange = (cohortId, field, delta) => {
+        setApplications(prev => ({
+          ...prev,
+          [cohortId]: {
+            ...(prev[cohortId] || {}),
+            [field]: Math.max(0, ((prev[cohortId] && prev[cohortId][field]) || 0) + delta)
+          }
+        }));
+      };
+
+      const localBackupKeys = ['sa_tasks', 'sa_gates', 'sa_assessments', 'sa_branch', 'sa_portfolio', 'sa_applications'];
+
+      // migrationKeys() -> string[]
+      //   input: none (reads closed-over local state). output: the subset of
+      //     the six existing sa_* keys that hold non-empty local progress —
+      //     exactly the keys a one-time D1 import would carry; no new key is
+      //     ever introduced. Recomputed when any local state changes.
+      //   Pre-condition: none. Post-condition: every member is one of the six
+      //     existing sa_* keys. Invariant: no seventh key can appear.
+      //   Side effect: read-only localStorage reads via safeGet.
+      const migrationKeys = useMemo(() => localBackupKeys.filter((key) => {
+        const value = safeGet(key, null);
+        if (value === null || value === undefined) return false;
+        if (typeof value === 'object' && !Array.isArray(value)) return Object.keys(value || {}).length > 0;
+        return true;
+      }), [tasks, gates, assessments, branch, portfolio, applications]);
+
+      // --- OPERATOR SIGN-IN (settings: Data & Backup) ---
+      // handleSignIn() -> Promise<void>
+      //   input: none (reads closed-over signInPassword). POSTs
+      //     { operator_id: 'operator', password: string } to /auth/login with
+      //     credentials: 'same-origin'.
+      //   output success (200): session cookie sid set by the browser
+      //     (HttpOnly; never read by JS); operatorSignedIn := true; pending
+      //     proposals and migration preview (re)loaded.
+      //   output 401 INVALID_CREDENTIALS: visible 'Invalid credentials'
+      //     message; output 429 RATE_LIMITED: visible rate-limit message;
+      //     output network/other: visible generic message. The tab stays fully
+      //     usable in every case; localStorage is never touched.
+      //   Pre-condition: signInPassword may be empty (server returns 400,
+      //     rendered as a generic unavailable message). Post-condition: no
+      //     new localStorage key; sid never read by client JS.
+      //   Side effect: one POST /auth/login; the browser handles Set-Cookie sid.
+      async function handleSignIn() {
+        setSigningIn(true);
+        setSignInError(null);
+        try {
+          await fetchJson('/auth/login', {
+            method: 'POST',
+            body: { operator_id: 'operator', password: signInPassword }
+          });
+          // MECHANICAL: sid is HttpOnly — the browser stores it; the client
+          // never reads it. Signed-in status is confirmed by /agent/proposals.
+          setOperatorSignedIn(true);
+          await loadPendingProposals();
+          // MECHANICAL: the initial unauthenticated mount fetch may have failed
+          // with 401. After sign-in, fetch authoritative state so the branch
+          // selector and assessment tab reflect D1 immediately.
+          await refreshAuthoritativeState();
+          // loadMigrationPreview() is triggered by the operatorSignedIn
+          // effect above — no redundant fetch needed here.
+        } catch (err) {
+          if (err.status === 401) setSignInError('Invalid credentials. Please try again.');
+          else if (err.status === 429) setSignInError('Too many sign-in attempts. Please wait a moment, then try again.');
+          else setSignInError('Sign-in is unavailable right now. Try again later.');
+        } finally {
+          setSigningIn(false);
+        }
+      }
+
+      function handleSignOut() {
+        setOperatorSignedIn(false);
+        setPendingProposals([]);
+        setProposalsError(null);
+        setDashboardPendingCount(null);
+        setMigrationPreview(null);
+        setMigrationError(null);
+        setMigrationResult(null);
+        // MECHANICAL: no /auth/logout route exists and sid is HttpOnly, so the
+        // client cannot clear the server session. Signing out forgets the
+        // session on the client only; the cookie expires on its own (24h TTL).
+      }
+
+      // loadPendingProposals() -> Promise<void>
+      //   input: none. Fetches GET /agent/proposals with credentials:
+      //     'same-origin'.
+      //   output success (200): pendingProposals := data.proposals;
+      //     dashboardPendingCount := proposals.length; operatorSignedIn :=
+      //     true (a 200 confirms a live session). output 401: signed out,
+      //     empty list, null dashboard count, no error (expected before sign
+      //     in). output 403 / 503 / network / other: visible non-alarming
+      //     error, list and count unchanged, tab fully usable.
+      //   Pre-condition: none. Post-condition: no localStorage write; never
+      //     silently swallows a failure — every path sets visible state.
+      //   Side effect: one read-only GET /agent/proposals; the dashboard
+      //     count is derived from the same payload the settings section shows.
+      async function loadPendingProposals() {
+        try {
+          const data = await fetchJson('/agent/proposals');
+          const proposals = Array.isArray(data && data.proposals) ? data.proposals : [];
+          setPendingProposals(proposals);
+          setProposalsError(null);
+          setDashboardPendingCount(proposals.length);
+          setOperatorSignedIn(true);
+        } catch (err) {
+          if (err.status === 401) {
+            setOperatorSignedIn(false);
+            setPendingProposals([]);
+            setDashboardPendingCount(null);
+            setProposalsError(null);
+          } else {
+            setDashboardPendingCount(null);
+            setProposalsError('Unable to load pending proposals right now. Try again later.');
+          }
+        }
+      }
+
+      // handleDecide(proposalId, decision) -> Promise<void>
+      //   input: proposalId - non-empty string; decision - the exact literal
+      //     'APPROVE' | 'REJECT' expected by POST /review/decide. POSTs
+      //     { proposal_id, decision } to /review/decide with credentials:
+      //     'same-origin'.
+      //   output success (200): proposal list refreshed (applied or rejected
+      //     reflected server-side), error cleared. output 409
+      //     PROPOSAL_TERMINAL: visible 'already decided' message AND list
+      //     refreshed — never silent. output 401: signed out + visible
+      //     message; 403 CSRF_REJECTED / 404 PROPOSAL_NOT_FOUND / 503 /
+      //     network: visible message; list refreshed where state may have
+      //     changed.
+      //   Pre-condition: operator signed in. Post-condition: no localStorage
+      //     write; every error path is visible, never silent.
+      //   Side effect: one POST /review/decide (state-changing, CSRF-checked
+      //     by middleware); followed by one GET /agent/proposals refresh.
+      async function handleDecide(proposalId, decision) {
+        setDecidingProposal(proposalId);
+        // Decision phase: a state-changing POST. Its outcome is reported as the
+        // decision outcome only — never as a refresh outcome. A decision that
+        // commits must never be rendered as failed because a follow-up read
+        // failed (Defect B).
+        try {
+          await fetchJson('/review/decide', {
+            method: 'POST',
+            body: { proposal_id: proposalId, decision }
+          });
+        } catch (err) {
+          if (err.status === 401) {
+            setOperatorSignedIn(false);
+            setProposalsError('Sign-in expired. Please sign in again.');
+          } else if (err.status === 403) {
+            setProposalsError('Decision was rejected by the server.');
+          } else if (err.status === 409) {
+            setProposalsError('This proposal was already decided.');
+            await loadPendingProposals();
+          } else if (err.status === 404) {
+            setProposalsError('Proposal not found.');
+            await loadPendingProposals();
+          } else {
+            setProposalsError('Unable to apply the decision right now. Try again later.');
+          }
+          setDecidingProposal(null);
+          return;
+        }
+
+        // Decision committed successfully. Refresh the proposal list and the
+        // authoritative state in separate failure domains: a refresh failure
+        // must never be reported as a decision failure. Authoritative refresh
+        // updates the branch selector when a branch proposal is approved.
+        try {
+          await loadPendingProposals();
+          setProposalsError(null);
+          await refreshAuthoritativeState();
+        } catch (refreshErr) {
+          // The decision already committed (200 from /review/decide). Report
+          // only the refresh problem, with a distinct, accurate message.
+          if (refreshErr.status === 401) {
+            setOperatorSignedIn(false);
+          } else {
+            setProposalsError('Decision applied, but the proposal list could not be refreshed. Try again later.');
+          }
+        } finally {
+          setDecidingProposal(null);
+        }
+      }
+
+      // loadMigrationPreview() -> Promise<void>
+      //   input: none (requires operatorSignedIn). POSTs /import/preview
+      //     (session cookie, read-only dry-run — no write occurs) with the
+      //     subset of the six sa_* keys that hold non-empty local progress.
+      //     Browsers throw when a body is attached to GET/HEAD (verified
+      //     empirically), so the preview is POSTed to the SAME /import/preview
+      //     path. The preview only needs keys + row counts + resulting version
+      //     (DESIGN.md), never the full values, so the payload carries just
+      //     marker keys — never stored by the server, unknown keys ignored.
+      //   output success (200): migrationPreview := { conflict,
+      //     current_version, keys_imported, ignored_keys, resulting_version }.
+      //     output 401: signed out + visible message. output other: visible
+      //     generic message; preview stays absent, tab usable.
+      //   Pre-condition: operatorSignedIn === true. Post-condition: no
+      //     localStorage read/write; the dry-run never mutates D1 or client
+      //     state.
+      //   Side effect: one read-only POST /import/preview.
+      async function loadMigrationPreview() {
+        if (!operatorSignedIn) return;
+        setMigrationLoading(true);
+        try {
+          const previewPayload = Object.fromEntries(
+            migrationKeys.map((key) => [key, true])
+          );
+          const data = await fetchJson('/import/preview', {
+            method: 'POST',
+            body: previewPayload,
+          });
+          setMigrationPreview(data);
+          setMigrationError(null);
+        } catch (err) {
+          if (err.status === 401) {
+            setOperatorSignedIn(false);
+            setMigrationError('Sign-in expired. Please sign in again.');
+          } else {
+            setMigrationError('Unable to load the migration preview right now. Try again later.');
+          }
+        } finally {
+          setMigrationLoading(false);
+        }
+      }
+
+      // handleMigrate() -> Promise<void>
+      //   input: none (reads closed-over local state). POSTs the six existing
+      //     sa_* keys only to /import with credentials: 'same-origin'.
+      //   output success (200): success message + preview refreshed (conflict
+      //     card shown since D1 now holds a snapshot). output 409
+      //     IMPORT_CONFLICT: visible conflict message, no overwrite path
+      //     offered, preview refreshed. output 401 / 403 / 400 / 503 /
+      //     network: visible message; local state never touched by the server.
+      //   Pre-condition: operator signed in; invoked only by an explicit
+      //     operator click — never automatic, never on load.
+      //   Post-condition: no new localStorage key; existing progress never
+      //     overwritten or silently re-based.
+      //   Side effect: one POST /import (state-changing, CSRF-checked) which
+      //     creates a new immutable snapshot version in D1; followed by one
+      //     GET /import/preview.
+      async function handleMigrate() {
+        setMigrating(true);
+        setMigrationError(null);
+        try {
+          // MECHANICAL: POST /import accepts only the six known sa_* keys
+          // (functions/import.js KNOWN_KEYS); other keys are ignored, so the
+          // payload must use the sa_* names exactly.
+          const payload = {
+            sa_tasks: tasks,
+            sa_gates: gates,
+            sa_assessments: assessments,
+            sa_branch: branch,
+            sa_portfolio: portfolio,
+            sa_applications: applications
+          };
+          await fetchJson('/import', { method: 'POST', body: payload });
+          setMigrationResult('Imported into D1 as a new immutable snapshot.');
+          await loadMigrationPreview();
+        } catch (err) {
+          if (err.status === 401) {
+            setOperatorSignedIn(false);
+            setMigrationError('Sign-in expired. Please sign in again.');
+          } else if (err.status === 403) {
+            setMigrationError('Import was rejected by the server.');
+          } else if (err.status === 409) {
+            setMigrationError('Import conflict: D1 already holds approved state. Existing state is never overwritten.');
+            await loadMigrationPreview();
+          } else {
+            setMigrationError('Import is unavailable right now. Try again later.');
+          }
+        } finally {
+          setMigrating(false);
+        }
+      }
+
+      const renderDashboard = () => h('div', { key: 'tab-dashboard', className: "space-y-6" },
+        h('div', { className: "bg-blue-900/30 border border-blue-800 rounded-xl p-6 relative overflow-hidden" },
+          h('div', { className: "absolute top-0 right-0 p-4 opacity-10" }, h(Target, { size: 120 })),
+          h('h2', { className: "text-2xl font-bold text-white mb-2" }, 'SIGNAL AUGMENTED'),
+          h('p', { className: "text-blue-200 max-w-2xl" },
+            `"The objective is not merely to learn faster; it is to make Filipe increasingly difficult for the market to misclassify as 'support only.'"`
+          ),
+          h('div', { className: "mt-6 bg-gray-900/50 rounded-lg p-4 border border-gray-700 inline-block" },
+            h('div', { className: "flex items-center gap-2 mb-2" },
+              h(AlertCircle, { size: 16, className: "text-yellow-500" }),
+              h('span', { className: "text-sm font-semibold text-gray-200" }, 'Operation LemonDrop Baseline Active')
+            ),
+            h('p', { className: "text-xs text-gray-400" },
+              'Terraform, Docker, CI/CD, and Linux are currently tracked as ',
+              h('span', { className: "text-yellow-400 font-medium" }, 'AI-Assisted'),
+              '. Demonstrate independent competence through T2-T4 gates to upgrade.'
+            )
+          )
+        ),
+        h('div', { className: "grid grid-cols-1 md:grid-cols-4 gap-4" },
+          h('div', { className: "bg-gray-800 border border-gray-700 rounded-xl p-5" },
+            h('h3', { className: "text-gray-400 text-sm font-medium mb-1" }, 'Independent Mastery'),
+            h('div', { className: "flex items-end gap-2" },
+              h('span', { className: "text-4xl font-bold text-white" }, `${progressStats.completionPercent}%`),
+              h('span', { className: "text-sm text-gray-500 mb-1" }, 'of core tasks')
+            ),
+            h('div', { className: "w-full bg-gray-700 rounded-full h-2 mt-4" },
+              h('div', { className: "bg-green-500 h-2 rounded-full", style: { width: `${progressStats.completionPercent}%` } })
+            )
+          ),
+          h('div', { className: "bg-gray-800 border border-gray-700 rounded-xl p-5" },
+            h('h3', { className: "text-gray-400 text-sm font-medium mb-1" }, 'Decision Gates Passed'),
+            h('div', { className: "flex items-end gap-2" },
+              h('span', { className: "text-4xl font-bold text-white" }, String(progressStats.passedGates)),
+              h('span', { className: "text-sm text-gray-500 mb-1" }, `/ ${progressStats.totalGates}`)
+            )
+          ),
+          h('div', { className: "bg-gray-800 border border-gray-700 rounded-xl p-5" },
+            h('h3', { className: "text-gray-400 text-sm font-medium mb-1" }, 'Active Specialization'),
+            h('div', { className: "mt-2 flex items-center gap-2" },
+              branch
+                ? h('span', { className: "px-3 py-1 bg-purple-900/50 text-purple-400 border border-purple-700 rounded-md text-sm font-semibold" }, `Path ${branch}`)
+                : h('span', { className: "text-gray-500 italic text-sm" }, 'Undecided (Wait for Week 6)')
+            )
+          ),
+          h('div', { className: "bg-gray-800 border border-gray-700 rounded-xl p-5" },
+            h('h3', { className: "text-gray-400 text-sm font-medium mb-1" }, 'Job Applications'),
+            h('div', { className: "flex items-end gap-2 mt-1" },
+              h('span', { className: "text-3xl font-bold text-white" },
+                String(Object.values(applications || {}).reduce((acc, curr) => acc + ((curr && curr.applied) || 0), 0))
+              ),
+              h('span', { className: "text-sm text-gray-500 mb-1" }, 'total sent')
+            )
+          ),
+          h('div', { className: "bg-gray-800 border border-gray-700 rounded-xl p-5" },
+            h('h3', { className: "text-gray-400 text-sm font-medium mb-1" }, 'Pending Approvals'),
+            h('div', { className: "flex items-end gap-2" },
+              h('span', { className: "text-4xl font-bold text-white" }, dashboardPendingCount === null ? '—' : String(dashboardPendingCount)),
+              h('span', { className: "text-sm text-gray-500 mb-1" }, dashboardPendingCount === null ? 'sign in to see' : 'proposals awaiting approval')
+            )
+          )
+        )
+      );
+
+      const renderRoadmap = () => h('div', { key: 'tab-roadmap', className: "space-y-6" },
+        h('div', { className: "flex justify-between items-end border-b border-gray-700 pb-4" },
+          h('div', null,
+            h('h2', { className: "text-2xl font-bold text-white" }, '12-Week Execution Plan'),
+            h('p', { className: "text-gray-400 mt-1" }, 'Every study block must end in execution. Passive courses do not count.')
+          )
+        ),
+        ...ROADMAP_DATA.map(week =>
+          h('div', { key: week.id, className: "bg-gray-800 border border-gray-700 rounded-xl overflow-hidden" },
+            h('div', { className: "p-5 border-b border-gray-700 bg-gray-800/50" },
+              h('h3', { className: "text-xl font-bold text-white" }, week.title),
+              h('p', { className: "text-gray-400 text-sm mt-1" }, week.focus)
+            ),
+            h('div', { className: "p-5 space-y-4" },
+              h('h4', { className: "text-sm font-semibold text-gray-300 uppercase tracking-wider" }, 'Deliverables & Tasks'),
+              ...week.tasks.map(task =>
+                h('div', { key: task.id, className: "flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-3 bg-gray-900/50 rounded-lg border border-gray-700/50" },
+                  h('div', { className: "flex items-start gap-3" },
+                    h('div', { className: "mt-1" }, h(StatusIcon, { status: tasks[task.id] })),
+                    h('span', { className: "text-gray-200" }, task.text)
+                  ),
+                  h(StatusSelector, {
+                    status: tasks[task.id],
+                    onChange: (val) => handleTaskStatus(task.id, val)
+                  })
+                )
+              ),
+              h('div', { className: "mt-6 pt-4 border-t border-gray-700" },
+                h('h4', { className: "text-sm font-semibold text-gray-300 uppercase tracking-wider mb-3" }, 'Acceptance Gate'),
+                h('div', { className: `p-4 rounded-lg border flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${gates[week.gate.id] === STATUS.INDEPENDENT ? 'bg-green-900/20 border-green-800' : 'bg-gray-900 border-gray-700'}` },
+                  h('div', null,
+                    h('span', { className: "font-bold text-white mr-2" }, `${week.gate.name}:`),
+                    h('span', { className: "text-gray-300 text-sm" }, week.gate.criteria)
+                  ),
+                  h(StatusSelector, {
+                    status: gates[week.gate.id],
+                    onChange: (val) => handleGateStatus(week.gate.id, val)
+                  })
+                )
+              )
+            )
+          )
+        )
+      );
+
+      // renderAssessments() -> ReactElement
+      //   input: none (reads closed-over assessments, COMPETENCY_EVIDENCE, authoritativeState).
+      //   output: the assessments tab element tree. Renders the existing table and StatusSelector
+      //     behaviour unchanged, plus three additive parts:
+      //       1. honesty banner (O1.2) at the top of the tab;
+      //       2. authoritative progress block from GET /agent/state, rendered only when the fetch
+      //          succeeds; on 401/403/network failure nothing renders and the tab falls back to
+      //          local state (never breaks, never blanks);
+      //       3. three-axis competency evidence section from COMPETENCY_EVIDENCE.
+      //   Pre-condition: none.
+      //   Post-condition: StatusSelector/STATUS behaviour unchanged; user selections under
+      //     sa_assessments are never overwritten, re-based, or re-derived; no new localStorage key.
+      //   Side effect: none (the /agent/state fetch is owned by the mount effect above).
+      //   Invariant: the three-axis disclosure is additive information only; it does not alter
+      //     assessment grades stored under sa_assessments.
+      const renderAssessments = () => h('div', { key: 'tab-assessments', className: "space-y-6" },
+        h('div', null,
+          h('h2', { className: "text-2xl font-bold text-white" }, 'Technical Competency Matrix'),
+          h('p', { className: "text-gray-400 mt-1" }, 'Instrument aptitude, do not assume it. A skill is not marketable until T4 is passed independently.')
+        ),
+        // --- HONESTY BANNER (O1.2) --- visible, plain, unmissable
+        h('div', { className: "bg-yellow-900/20 border border-yellow-800 rounded-lg p-5 mb-6" },
+          h('p', { className: "font-bold text-yellow-400 text-sm" }, 'Honesty — audited competency disclosure'),
+          h('p', { className: "text-sm text-gray-300 mt-3" }, 'Independently tested = NOT DEMONSTRATED for every competency.'),
+          h('p', { className: "text-sm text-gray-300 mt-3" }, 'No second party has followed the runbook.'),
+          h('p', { className: "text-sm text-gray-300 mt-3" }, 'Working code is project evidence only — it never establishes independent competence.'),
+          h('p', { className: "text-sm text-gray-300 mt-3" }, 'Git authorship does not prove independent skill; an agent operating under the human\'s git identity produces that same signature.'),
+          h('p', { className: "text-sm text-gray-300 mt-3" }, 'AWS experience does not automatically satisfy Azure assessments.'),
+          h('p', { className: "text-xs text-gray-500 mt-3" }, 'Vocabulary: AI_ASSISTED, INDEPENDENT, PENDING. COMPETENCY_EVIDENCE is a static audit; D1 (assessment_grade) is authoritative for user progress.')
+        ),
+        h('div', { className: "overflow-x-auto" },
+          h('table', { className: "w-full text-left border-collapse" },
+            h('thead', null,
+              h('tr', null,
+                h('th', { className: "p-3 border-b border-gray-700 text-gray-400 font-medium" }, 'Skill / Domain'),
+                ...T_GATES.map(g =>
+                  h('th', { key: g.id, className: "p-3 border-b border-gray-700 text-gray-400 font-medium text-center" },
+                    h('div', { className: "font-semibold text-gray-200" }, g.name),
+                    h('div', { className: "text-xs font-normal mt-1" }, g.desc)
+                  )
+                )
+              )
+            ),
+            h('tbody', null,
+              ...ASSESSMENTS.map(skill =>
+                h('tr', { key: skill.id, className: "border-b border-gray-800 hover:bg-gray-800/50 transition-colors" },
+                  h('td', { className: "p-3 font-medium text-gray-200" }, skill.name),
+                  ...T_GATES.map(gate => {
+                    const key = `${skill.id}_${gate.id}`;
+                    const val = assessments[key] || STATUS.PENDING;
+                    return h('td', { key, className: "p-2 text-center" },
+                      h('select', {
+                        value: val,
+                        onChange: (e) => handleAssessment(skill.id, gate.id, e.target.value),
+                        className: `text-xs p-1.5 rounded-md border w-full font-medium ${
+                          val === STATUS.INDEPENDENT ? 'bg-green-900/30 text-green-400 border-green-800' :
+                          val === STATUS.AI_ASSISTED ? 'bg-yellow-900/30 text-yellow-400 border-yellow-800' :
+                          'bg-gray-900 text-gray-500 border-gray-700'
+                        }`
+                      },
+                        h('option', { value: STATUS.PENDING }, '-'),
+                        h('option', { value: STATUS.AI_ASSISTED }, 'AI Assisted'),
+                        h('option', { value: STATUS.INDEPENDENT }, 'Independent')
+                      )
+                    );
+                  })
+                )
+              )
+            )
+          )
+        ),
+        h('div', { className: "bg-gray-800 border border-gray-700 rounded-xl p-5 mt-8" },
+          h('h3', { className: "font-bold text-white mb-2" }, 'Anti-Bullshit Rule'),
+          h('p', { className: "text-sm text-gray-300" },
+            'Calendar time is not the acceptance test. Someone who spends 300 deliberate hours solving progressively harder infrastructure problems is not in the same state as someone who spent three months watching courses after work.'
+          )
+        ),
+        // --- AUTHORITATIVE PROGRESS (D1) --- rendered only on a successful fetch; failures fall back to local state
+        authoritativeState ? h('div', { className: "bg-blue-900/20 border border-blue-800 rounded-lg p-4 mt-6 space-y-1" },
+          h('h4', { className: "font-bold text-white mb-2" }, 'Authoritative progress (D1) — read-only'),
+          h('p', { className: "text-sm text-gray-300" }, 'Fetched from the server; the local sa_* cache is unchanged and no grade state is written from this read.'),
+          h('div', { className: "flex items-center gap-2 mt-2 text-xs" },
+            authoritativeState.snapshot_version !== undefined
+              ? h('span', { className: "text-gray-300" }, `snapshot v${String(authoritativeState.snapshot_version)}`)
+              : h('span', { className: "text-gray-500 italic" }, 'no snapshot version'),
+            authoritativeState.imported_at
+              ? h('span', { className: "text-gray-300" }, `imported ${String(authoritativeState.imported_at)}`)
+              : null
+          )
+        ) : null,
+        // --- THREE-AXIS COMPETENCY EVIDENCE (O1.1, O1.3) ---
+        // Per competency: project evidence / AI-assisted execution / independently tested,
+        // as three visually separate, individually labelled elements, provider-tagged so an
+        // AWS artefact never reads as satisfying an Azure assessment.
+        h('div', { className: "bg-gray-800 border border-gray-700 rounded-lg p-6 mt-8" },
+          h('h3', { className: "font-bold text-white mb-2" }, 'Competency Evidence — Three-Axis Disclosure (audited)'),
+          h('p', { className: "text-sm text-gray-400 mb-4" },
+            'Per-competency audit finding from COMPETENCY_EVIDENCE. Provider-separated: AWS evidence never satisfies an Azure assessment. Independently tested = NOT DEMONSTRATED for every competency.'
+          ),
+          ...COMPETENCY_EVIDENCE.map((ev, i) => {
+            const skill = ASSESSMENTS.find(s => s.id === ev.id);
+            const last = i === COMPETENCY_EVIDENCE.length - 1;
+            const axis = last ? "pb-2 border-b border-gray-700/50" : "pb-2 mb-2 border-b border-gray-700/50";
+            return h('div', { key: ev.id, className: "bg-gray-800/50 border border-gray-700 rounded-lg p-4 mb-4" },
+              h('div', { className: "flex items-center gap-2 mb-3" },
+                h('span', { className: "font-semibold text-gray-200" }, skill ? skill.name : ev.id),
+                h('span', { className: `px-3 py-1 rounded text-xs font-bold border ${providerBadgeClass(ev.provider)}` }, providerLabel(ev.provider))
+              ),
+              h('div', { className: axis },
+                h('div', { className: "flex items-start gap-1 mb-1" },
+                  h('span', { className: "font-semibold text-xs text-gray-400 uppercase" }, 'Project evidence'),
+                  h('span', { className: `text-xs font-medium ${ev.project_evidence.value ? 'text-green-400' : 'text-gray-500'}` }, ev.project_evidence.value ? 'present' : 'absent')
+                ),
+                h('div', { className: "text-xs text-gray-300" }, `${ev.project_evidence.ref} — ${ev.project_evidence.note}`)
+              ),
+              h('div', { className: axis },
+                h('div', { className: "flex items-start gap-1 mb-1" },
+                  h('span', { className: "font-semibold text-xs text-gray-400 uppercase" }, 'AI-assisted execution'),
+                  h('span', { className: `text-xs font-medium ${ev.ai_assisted.value ? 'text-yellow-400' : 'text-gray-500'}` }, ev.ai_assisted.note)
+                )
+              ),
+              h('div', { className: axis },
+                h('div', { className: "flex items-start gap-1 mb-1" },
+                  h('span', { className: "font-semibold text-xs text-gray-400 uppercase" }, 'Independently tested'),
+                  h('span', { className: "text-xs font-medium text-gray-500" }, 'NOT DEMONSTRATED')
+                ),
+                h('div', { className: "text-xs text-gray-300" }, ev.independent.note)
+              )
+            );
+          })
+        )
+      );
+
+      const renderBranches = () => h('div', { key: 'tab-branches', className: "space-y-6" },
+        h('div', null,
+          h('h2', { className: "text-2xl font-bold text-white" }, 'Lateral Move Board'),
+          h('p', { className: "text-gray-400 mt-1" }, 'Weeks 1-6 are common core. Choose specialization using observed learning velocity, project quality, and live-market response—not prestige.')
+        ),
+        h('div', { className: "grid grid-cols-1 lg:grid-cols-3 gap-6" },
+          ...BRANCHES.map(b =>
+            h('div', {
+              key: b.id,
+              className: `border rounded-xl p-6 relative transition-all ${
+                branch === b.id
+                  ? 'bg-purple-900/20 border-purple-500 ring-1'
+                  : 'bg-gray-800 border-gray-700 hover:border-gray-500'
+              }`
+            },
+              branch === b.id ? h('div', { className: "absolute top-0 right-0 bg-purple-500 text-white text-xs font-bold px-3 py-1 rounded-bl-lg rounded-tr-lg" }, 'SELECTED') : null,
+              h('div', { className: "text-xs font-bold text-gray-400 uppercase tracking-wider mb-2" }, b.type),
+              h('h3', { className: "text-xl font-bold text-white mb-4" }, b.name),
+              h('div', { className: "space-y-4 text-sm" },
+                h('div', null,
+                  h('span', { className: "text-gray-400 block mb-1" }, 'Target Identity:'),
+                  h('span', { className: "text-gray-200 font-medium" }, b.target)
+                ),
+                h('div', null,
+                  h('span', { className: "text-gray-400 block mb-1" }, 'Core additions:'),
+                  h('span', { className: "text-gray-300" }, b.core)
+                ),
+                h('div', null,
+                  h('span', { className: "text-gray-400 block mb-1" }, 'Why:'),
+                  h('span', { className: "text-gray-300 italic" }, `"${b.reason}"`)
+                )
+              ),
+              h('button', {
+                type: 'button',
+                onClick: () => setBranch(b.id),
+                className: `mt-6 w-full py-2 rounded-lg font-bold transition-colors ${
+                  branch === b.id
+                    ? 'bg-purple-600 hover:bg-purple-700 text-white'
+                    : 'bg-gray-700 hover:bg-gray-600 text-gray-200'
+                }`
+              }, branch === b.id ? 'Active Branch' : 'Select Branch')
+            )
+          )
+        )
+      );
+
+      const renderPortfolio = () => h('div', { key: 'tab-portfolio', className: "space-y-6" },
+        h('div', { className: "flex justify-between items-end border-b border-gray-700 pb-4" },
+          h('div', null,
+            h('h2', { className: "text-2xl font-bold text-white" }, 'Portfolio Operating System'),
+            h('p', { className: "text-gray-400 mt-1" }, 'The portfolio is a transmitter, not a storage folder. Implement the 72-hour emission rule.')
+          )
+        ),
+        ...PORTFOLIO_PROJECTS.map(project =>
+          h('div', { key: project.id, className: "bg-gray-800 border border-gray-700 rounded-xl p-5" },
+            h('div', { className: "flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4" },
+              h('div', null,
+                h('h3', { className: "text-lg font-bold text-white" }, project.name),
+                h('p', { className: "text-gray-400 text-sm" }, `Proof: ${project.proof}`)
+              ),
+              h('div', { className: "flex items-center gap-2" },
+                h('input', {
+                  type: 'text',
+                  placeholder: 'https://github.com/...',
+                  value: portfolio[`${project.id}_link`] || '',
+                  onChange: (e) => handlePortfolioLink(project.id, e.target.value),
+                  className: "bg-gray-900 border border-gray-700 rounded-lg px-3 py-1.5 text-sm text-gray-200 w-64 focus:outline-none focus:border-blue-500"
+                }),
+                h('a', {
+                  href: portfolio[`${project.id}_link`] || '#',
+                  target: '_blank',
+                  rel: 'noreferrer',
+                  className: `p-1.5 rounded-lg ${portfolio[`${project.id}_link`] ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-gray-700 text-gray-500 cursor-not-allowed'}`
+                }, h(ExternalLink, { size: 16 }))
+              )
+            ),
+            h('div', { className: "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3" },
+              ...SIGNALS.map(signal => {
+                const key = `${project.id}_${signal.id}`;
+                const isEmitted = Boolean(portfolio[key]);
+                return h('button', {
+                  type: 'button',
+                  key,
+                  onClick: () => handlePortfolioSignal(project.id, signal.id, !isEmitted),
+                  className: `p-3 rounded-lg border text-left transition-colors flex flex-col gap-2 ${
+                    isEmitted
+                      ? 'bg-blue-900/20 border-blue-800 text-blue-400'
+                      : 'bg-gray-900 border-gray-700 text-gray-400 hover:border-gray-500'
+                  }`
+                },
+                  h('div', { className: "flex justify-between items-start w-full" },
+                    h('span', { className: "text-xs font-bold truncate pr-2" }, signal.name),
+                    isEmitted ? h(CheckCircle2, { size: 14, className: "text-blue-500 shrink-0" }) : null
+                  ),
+                  h('span', { className: "text-[10px] leading-tight opacity-80" }, signal.channel)
+                );
+              })
+            )
+          )
+        )
+      );
+
+      const renderApplications = () => h('div', { key: 'tab-applications', className: "space-y-6" },
+        h('div', null,
+          h('h2', { className: "text-2xl font-bold text-white" }, 'Application Cohort Strategy'),
+          h('p', { className: "text-gray-400 mt-1" }, 'Let the job search evolve with the person. Track conversion rates by cohort.')
+        ),
+        h('div', { className: "overflow-x-auto" },
+          h('table', { className: "w-full text-left border-collapse" },
+            h('thead', null,
+              h('tr', null,
+                h('th', { className: "p-3 border-b border-gray-700 text-gray-400 font-medium" }, 'Cohort'),
+                h('th', { className: "p-3 border-b border-gray-700 text-gray-400 font-medium" }, 'Target Range'),
+                h('th', { className: "p-3 border-b border-gray-700 text-gray-400 font-medium text-center" }, 'Applied'),
+                h('th', { className: "p-3 border-b border-gray-700 text-gray-400 font-medium text-center" }, 'Recruiter Screen'),
+                h('th', { className: "p-3 border-b border-gray-700 text-gray-400 font-medium text-center" }, 'Tech Interview')
+              )
+            ),
+            h('tbody', null,
+              ...COHORTS.map(cohort =>
+                h('tr', { key: cohort.id, className: "border-b border-gray-800" },
+                  h('td', { className: "p-3" },
+                    h('div', { className: "font-bold text-gray-200" }, cohort.name),
+                    h('div', { className: "text-xs text-gray-500" }, cohort.titles)
+                  ),
+                  h('td', { className: "p-3 text-sm text-gray-400" }, `~${cohort.target}`),
+                  ...['applied', 'screens', 'tech'].map(field =>
+                    h('td', { key: field, className: "p-3 text-center" },
+                      h('div', { className: "flex items-center justify-center gap-2" },
+                        h('button', {
+                          type: 'button',
+                          onClick: () => handleAppChange(cohort.id, field, -1),
+                          className: "w-6 h-6 rounded bg-gray-700 text-gray-300 hover:bg-gray-600 flex items-center justify-center"
+                        }, '-'),
+                        h('span', { className: "w-8 text-center font-bold text-white" },
+                          String((applications[cohort.id] && applications[cohort.id][field]) || 0)
+                        ),
+                        h('button', {
+                          type: 'button',
+                          onClick: () => handleAppChange(cohort.id, field, 1),
+                          className: "w-6 h-6 rounded bg-gray-700 text-gray-300 hover:bg-gray-600 flex items-center justify-center"
+                        }, '+')
+                      )
+                    )
+                  )
+                )
+              )
+            )
+          )
+        ),
+        h('div', { className: "grid grid-cols-1 md:grid-cols-2 gap-4 mt-6" },
+          h('div', { className: "bg-gray-800 border border-gray-700 rounded-xl p-5" },
+            h('h3', { className: "font-bold text-white mb-2" }, 'Relocation Gate'),
+            h('p', { className: "text-sm text-gray-300" },
+              'Do not resign or relocate for a possibility. Move when role, legal work status, start date, compensation, location/work model and probation risk are understood well enough to make the move rational.'
+            )
+          ),
+          h('div', { className: "bg-gray-800 border border-gray-700 rounded-xl p-5" },
+            h('h3', { className: "font-bold text-white mb-2" }, 'Czech Objective'),
+            h('p', { className: "text-sm text-gray-300" },
+              'Remote work is attractive, but a Prague/Brno hybrid role may advance both career and relationship goals faster than a remote Portuguese support role.'
+            )
+          )
+        )
+      );
+
+      const handleExport = () => {
+        const data = { tasks, gates, assessments, branch, portfolio, applications };
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `signal-augmented-backup-${new Date().toISOString().split('T')[0]}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      };
+
+      const handleImport = (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          try {
+            const data = JSON.parse(event.target.result);
+            if (data.tasks) setTasks(data.tasks);
+            if (data.gates) setGates(data.gates);
+            if (data.assessments) setAssessments(data.assessments);
+            if (data.branch !== undefined) setBranch(data.branch);
+            if (data.portfolio) setPortfolio(data.portfolio);
+            if (data.applications) setApplications(data.applications);
+            alert('Data imported successfully.');
+          } catch (err) {
+            console.error("Failed to parse JSON", err);
+          }
+        };
+        reader.readAsText(file);
+      };
+
+      const renderSettings = () => h('div', { key: 'tab-settings', className: "space-y-6 max-w-2xl" },
+        h('div', null,
+          h('h2', { className: "text-2xl font-bold text-white" }, 'Data Management'),
+          h('p', { className: "text-gray-400 mt-1" }, 'Backup your progress locally. Cloud storage integration is recommended for cross-device sync.')
+        ),
+        h('div', { className: "bg-gray-800 border border-gray-700 rounded-xl p-6 space-y-6" },
+          h('div', null,
+            h('h3', { className: "text-lg font-bold text-white mb-2" }, 'Export Data'),
+            h('p', { className: "text-sm text-gray-400 mb-4" }, 'Download a JSON file containing all your current progress, assessment scores, and portfolio links.'),
+            h('button', {
+              type: 'button',
+              onClick: handleExport,
+              className: "flex items-center gap-2 bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+            }, h(Download, { size: 18 }), ' Export to JSON')
+          ),
+          h('div', { className: "border-t border-gray-700 pt-6" },
+            h('h3', { className: "text-lg font-bold text-white mb-2" }, 'Import Data'),
+            h('p', { className: "text-sm text-gray-400 mb-4" }, 'Restore your progress from a previously exported JSON file. This will overwrite current session data.'),
+            h('label', { className: "flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors cursor-pointer w-fit" },
+              h(Upload, { size: 18 }),
+              ' Import JSON',
+              h('input', { type: 'file', accept: '.json', onChange: handleImport, className: "hidden" })
+            )
+          ),
+          // --- OPERATOR SIGN-IN (additive, settings tab) ---
+          h('div', { className: "border-t border-gray-700 pt-6" },
+            h('h3', { className: "text-lg font-bold text-white mb-2" }, 'Operator Sign-In'),
+            h('p', { className: "text-sm text-gray-400 mb-4" }, 'Sign in to review pending agent proposals and import your local backup into D1. The session cookie is stored by the browser only; this page never reads it.'),
+            operatorSignedIn
+              ? h('div', { className: "flex items-center gap-3" },
+                  h('span', { className: "flex items-center gap-1 text-sm text-green-400" }, h(CheckCircle2, { size: 14 }), ' Signed in as operator'),
+                  h('button', {
+                    type: 'button',
+                    onClick: handleSignOut,
+                    className: "text-sm font-medium text-gray-400 hover:text-gray-200 transition-colors"
+                  }, 'Sign out')
+                )
+              : h('div', null,
+                  h('div', { className: "flex gap-2 mb-3" },
+                    h('input', {
+                      type: 'password',
+                      placeholder: 'Password',
+                      value: signInPassword,
+                      onChange: (e) => setSignInPassword(e.target.value),
+                      className: "bg-gray-900 border border-gray-700 rounded-lg px-3 py-1.5 text-sm text-gray-200 w-64 focus:outline-none focus:border-blue-500"
+                    }),
+                    h('button', {
+                      type: 'button',
+                      disabled: signingIn,
+                      onClick: handleSignIn,
+                      className: `px-4 py-2 rounded-lg font-medium transition-colors ${signingIn ? 'bg-gray-600 cursor-not-allowed opacity-80' : 'bg-blue-600 hover:bg-blue-700 text-white'}`
+                    }, signingIn ? 'Signing in...' : 'Sign in')
+                  ),
+                  signInError && h('div', { className: "mt-3 p-3 rounded-lg border border-yellow-800 bg-yellow-900/30 text-yellow-400 text-xs" }, signInError)
+                )
+          ),
+          // --- PENDING PROPOSALS (O2.1, additive, settings tab) ---
+          h('div', { className: "border-t border-gray-700 pt-6" },
+            h('h3', { className: "text-lg font-bold text-white mb-2" }, 'Pending Proposals Awaiting Your Approval'),
+            h('p', { className: "text-sm text-gray-400 mb-4" }, 'The agent proposes (PENDING only). You approve or reject; nothing is applied without your decision.'),
+            !operatorSignedIn
+              ? h('p', { className: "text-sm text-gray-500" }, 'Sign in above to load pending proposals.')
+              : h('div', null,
+                  proposalsError && h('div', { className: "mb-4 p-3 rounded-lg border border-yellow-800 bg-yellow-900/30 text-yellow-400 text-xs" }, proposalsError),
+                  h('div', { className: "space-y-3" },
+                    pendingProposals.length === 0
+                      ? h('div', { className: "bg-gray-800 border border-gray-700 rounded-lg p-6 text-center" },
+                          h('p', { className: "text-gray-400 text-sm" }, 'No pending proposals awaiting your approval.'),
+                          h('p', { className: "text-xs text-gray-500 mt-1" }, 'The agent proposes; nothing waits for your decision.')
+                        )
+                      : pendingProposals.map((proposal) => h('div', {
+                          key: proposal.proposal_id,
+                          className: "border border-gray-700 rounded-lg p-4 mb-3"
+                        },
+                          h('div', { className: "flex justify-between items-start mb-3" },
+                            h('div', null,
+                              h('span', { className: "font-bold text-gray-200 text-sm truncate" }, String(proposal.proposal_id)),
+                              h('span', { className: "ml-2 px-2 py-0.5 rounded-md text-xs font-bold border border-gray-700 bg-gray-800 text-gray-400" }, 'PENDING')
+                            ),
+                            h('span', { className: "text-xs text-gray-500 truncate" }, String(proposal.created_at || ''))
+                          ),
+                          h('div', { className: "grid grid-cols-1 md:grid-cols-2 gap-4" },
+                            h('div', null,
+                              h('div', { className: "text-xs font-medium text-gray-400 uppercase mb-1" }, 'Before'),
+                              h('div', { className: "overflow-x-auto bg-gray-900 border border-gray-700 rounded-lg p-2 text-xs text-gray-300" }, JSON.stringify(proposal.before ?? null))
+                            ),
+                            h('div', null,
+                              h('div', { className: "text-xs font-medium text-gray-400 uppercase mb-1" }, 'After'),
+                              h('div', { className: "overflow-x-auto bg-gray-900 border border-gray-700 rounded-lg p-2 text-xs text-gray-300" }, JSON.stringify(proposal.after ?? null))
+                            )
+                          ),
+                          h('div', { className: "mt-4 flex items-center gap-2" },
+                            h('button', {
+                              type: 'button',
+                              disabled: decidingProposal === proposal.proposal_id,
+                              onClick: () => handleDecide(proposal.proposal_id, 'APPROVE'),
+                              className: `px-3 py-1.5 rounded-md font-medium text-xs transition-colors ${decidingProposal === proposal.proposal_id ? 'cursor-not-allowed opacity-80' : 'bg-green-900/20 border border-green-800 text-green-400'}`
+                            }, 'Approve'),
+                            h('button', {
+                              type: 'button',
+                              disabled: decidingProposal === proposal.proposal_id,
+                              onClick: () => handleDecide(proposal.proposal_id, 'REJECT'),
+                              className: `px-3 py-1.5 rounded-md font-medium text-xs transition-colors ${decidingProposal === proposal.proposal_id ? 'cursor-not-allowed opacity-80' : 'bg-gray-900 border border-gray-700 text-gray-400 hover:bg-gray-800 hover:text-gray-200'}`
+                            }, 'Reject')
+                          )
+                        )
+                      )
+                  )
+                )
+          ),
+          // --- MIGRATION PREVIEW (Decision 3, additive, settings tab) ---
+          h('div', { className: "border-t border-gray-700 pt-6" },
+            h('h3', { className: "text-lg font-bold text-white mb-2" }, 'Migration — Local Backup to D1'),
+            h('p', { className: "text-sm text-gray-400 mb-4" }, 'One-time import of your local backup into D1 as a new immutable snapshot. Existing approved state is never overwritten and there is no auto-migration — you must click Migrate explicitly.'),
+            migrationResult && h('p', { className: "mt-2 mb-4 text-sm text-green-400" }, migrationResult),
+            !operatorSignedIn
+              ? h('p', { className: "text-sm text-gray-500" }, 'Sign in above to load the migration preview.')
+              : migrationLoading
+                ? h('p', { className: "text-sm text-gray-500" }, 'Loading migration preview...')
+                : migrationError
+                  ? h('div', { className: "mb-4 p-3 rounded-lg border border-yellow-800 bg-yellow-900/30 text-yellow-400 text-xs" }, migrationError)
+                  : migrationPreview
+                    ? migrationPreview.conflict
+                      ? h('div', { className: "bg-yellow-900/30 border border-yellow-800 rounded-lg p-5" },
+                          h('h4', { className: "font-bold text-white mb-2" }, 'Migration blocked — approved state already exists'),
+                          h('p', { className: "text-sm text-gray-300 mb-2" }, `D1 already holds approved snapshot v${String(migrationPreview.current_version)}.`),
+                          h('p', { className: "text-sm text-gray-400" }, 'Existing approved state is never overwritten. No overwrite path is offered.')
+                        )
+                      : migrationKeys.length === 0
+                        ? h('p', { className: "text-sm text-gray-500" }, 'No local progress to migrate.')
+                        : h('div', { className: "bg-gray-800 border border-gray-700 rounded-lg p-5 space-y-3" },
+                            h('h4', { className: "font-bold text-white mb-2" }, 'Migration preview — what would be imported'),
+                            h('p', { className: "text-sm text-gray-300 mb-3" }, 'D1 is empty. Your local backup would be imported as a new immutable snapshot. Unknown keys are ignored by the server.'),
+                            h('div', { className: "text-xs font-medium text-gray-400 uppercase mb-1" }, 'Local keys to import'),
+                            h('div', { className: "space-y-1 mb-3" },
+                              ...migrationKeys.map((key) => h('div', { key: key, className: "text-sm text-gray-300 truncate" }, key))
+                            ),
+                            h('div', { className: "text-xs text-gray-500 mb-3" }, `Resulting snapshot version: v${String(migrationPreview.resulting_version)}`),
+                            h('button', {
+                              type: 'button',
+                              disabled: migrating,
+                              onClick: handleMigrate,
+                              className: `px-4 py-2 rounded-lg font-medium transition-colors ${migrating ? 'bg-gray-600 cursor-not-allowed opacity-80' : 'bg-blue-600 hover:bg-blue-700 text-white'}`
+                            }, migrating ? 'Migrating...' : 'Migrate')
+                          )
+                    : h('p', { className: "text-sm text-gray-500" }, 'No migration preview available.'),
+          )
+        )
+      );
+
+      const tabs = [
+        { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+        { id: 'roadmap', label: '12-Week Roadmap', icon: MapIcon },
+        { id: 'assessments', label: 'Assessments', icon: ShieldCheck },
+        { id: 'branches', label: 'Career Branches', icon: GitBranch },
+        { id: 'portfolio', label: 'Portfolio Signals', icon: FolderOpen },
+        { id: 'applications', label: 'Job Applications', icon: Briefcase },
+        { id: 'settings', label: 'Data & Backup', icon: Settings }
+      ];
+
+      return h('div', { className: "flex h-screen bg-gray-950 font-sans text-gray-100" },
+        // Sidebar
+        h('div', { className: "w-64 bg-gray-900 border-r border-gray-800 flex flex-col" },
+          h('div', { className: "p-6" },
+            h('h1', { className: "text-lg font-extrabold tracking-wider text-transparent bg-clip-text bg-gradient-to-r" }, 'SIGNAL AUGMENTED'),
+            h('div', { className: "text-xs font-medium text-gray-500 mt-1 uppercase tracking-widest" }, 'Filipe Vitorino')
+          ),
+          h('nav', { className: "flex-1 px-4 space-y-1 overflow-y-auto" },
+            ...tabs.map(tab => {
+              const Icon = tab.icon;
+              const isActive = activeTab === tab.id;
+              return h('button', {
+                type: 'button',
+                key: tab.id,
+                onClick: () => setActiveTab(tab.id),
+                className: `w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                  isActive
+                    ? 'bg-blue-600/10 text-blue-400'
+                    : 'text-gray-400 hover:bg-gray-800 hover:text-gray-200'
+                }`
+              },
+                h(Icon, { size: 18, className: isActive ? 'text-blue-500' : 'text-gray-500' }),
+                h('span', null, tab.label)
+              );
+            })
+          ),
+          h('div', { className: "p-4 border-t border-gray-800" },
+            h('div', { className: "bg-gray-800 rounded-lg p-3" },
+              h('div', { className: "text-xs text-gray-400 mb-1" }, 'Overall Progress'),
+              h('div', { className: "w-full bg-gray-900 rounded-full h-1.5 mb-2" },
+                h('div', { className: "bg-blue-500 h-1.5 rounded-full", style: { width: `${progressStats.completionPercent}%` } })
+              ),
+              h('div', { className: "flex justify-between text-xs font-medium" },
+                h('span', { className: "text-white" }, `${progressStats.independentTasks} Mastered`),
+                h('span', { className: "text-gray-500" }, `${progressStats.totalTasks} Total`)
+              )
+            )
+          )
+        ),
+        // Main Content
+        h('div', { className: "flex-1 overflow-y-auto p-8" },
+          h('div', { className: "max-w-5xl mx-auto" },
+            activeTab === 'dashboard' ? renderDashboard() :
+            activeTab === 'roadmap' ? renderRoadmap() :
+            activeTab === 'assessments' ? renderAssessments() :
+            activeTab === 'branches' ? renderBranches() :
+            activeTab === 'portfolio' ? renderPortfolio() :
+            activeTab === 'applications' ? renderApplications() :
+            renderSettings()
+          )
+        )
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(React.createElement(App));
+  </script>
+</body>
+</html>

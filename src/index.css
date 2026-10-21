@@ -1,0 +1,104 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --font-display: 'Chakra Petch', sans-serif;
+    --font-sans: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-mono: 'IBM Plex Mono', monospace;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    background-color: #121316;
+    color: #EAE6DF;
+    overflow-x: hidden;
+  }
+
+  h1, h2, h3, .font-display {
+    font-family: var(--font-display);
+  }
+
+  code, pre, .font-mono, .tabular-nums {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* 90s PlayStation Demo Disc Dithering & Blocky Hardware Surfaces */
+.dither-pattern {
+  background-image: radial-gradient(rgba(234, 230, 223, 0.07) 1px, transparent 0);
+  background-size: 4px 4px;
+}
+
+.dither-checker {
+  background-image:
+    linear-gradient(45deg, rgba(229, 169, 60, 0.12) 25%, transparent 25%),
+    linear-gradient(-45deg, rgba(229, 169, 60, 0.12) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, rgba(229, 169, 60, 0.12) 75%),
+    linear-gradient(-45deg, transparent 75%, rgba(229, 169, 60, 0.12) 75%);
+  background-size: 4px 4px;
+  background-position: 0 0, 0 2px, 2px -2px, -2px 0;
+}
+
+.dither-teal {
+  background-image:
+    linear-gradient(45deg, rgba(59, 158, 140, 0.14) 25%, transparent 25%),
+    linear-gradient(-45deg, rgba(59, 158, 140, 0.14) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, rgba(59, 158, 140, 0.14) 75%),
+    linear-gradient(-45deg, transparent 75%, rgba(59, 158, 140, 0.14) 75%);
+  background-size: 4px 4px;
+  background-position: 0 0, 0 2px, 2px -2px, -2px 0;
+}
+
+.dither-bar-fill {
+  background-color: #3B9E8C;
+  background-image:
+    linear-gradient(45deg, rgba(18, 19, 22, 0.25) 25%, transparent 25%),
+    linear-gradient(-45deg, rgba(18, 19, 22, 0.25) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, rgba(18, 19, 22, 0.25) 75%),
+    linear-gradient(-45deg, transparent 75%, rgba(18, 19, 22, 0.25) 75%);
+  background-size: 4px 4px;
+  background-position: 0 0, 0 2px, 2px -2px, -2px 0;
+}
+
+.ps1-panel {
+  background-color: #1A1C22;
+  border: 1px solid #323642;
+  box-shadow: inset 1px 1px 0px rgba(255, 255, 255, 0.04), inset -1px -1px 0px rgba(0, 0, 0, 0.4);
+}
+
+.ps1-button {
+  border: 1px solid #3E4352;
+  box-shadow: inset 1px 1px 0px rgba(255, 255, 255, 0.08), inset -1px -1px 0px rgba(0, 0, 0, 0.5);
+  transition: transform 120ms cubic-bezier(0.16, 1, 0.3, 1), background-color 120ms ease, border-color 120ms ease;
+}
+
+.ps1-button:active {
+  transform: translateY(1px);
+}
+
+/* Marquee Animation for Persistent Bottom GitHub + Gitea Commit Bar */
+@keyframes commit-marquee {
+  0% {
+    transform: translate3d(0%, 0, 0);
+  }
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+.animate-commit-marquee {
+  display: flex;
+  width: max-content;
+  animation: commit-marquee 38s linear infinite;
+}
+
+.animate-commit-marquee:hover {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-commit-marquee {
+    animation: none;
+  }
+}
