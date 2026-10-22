@@ -9,10 +9,10 @@
     "logsPath": "logs",
     "giteaBaseUrl": "",
     "giteaUser": "xarop_pa_toss",
-    "role": "Infrastructure & DevOps Engineer",
-    "summary": "Systems and infrastructure engineer transitioning operational administration experience into reproducible Linux, cloud networking, Terraform IaC, Docker containerization, and automated CI/CD pipelines.",
+    "role": "Infrastructure & DevOps Engineer · .NET Developer",
+    "summary": "Systems and infrastructure engineer & dotnet dev transitioning operational administration experience into reproducible Linux, cloud networking, Terraform IaC, Docker containerization, and automated CI/CD pipelines.",
     "pitch": "Building Flaggo — a lightweight, self-hosted 4-app Feature Flag & Runtime Configuration Platform decoupling code deployment from feature release.",
-    "stack": "Linux (Systemd / Journalctl) · Terraform · AWS & Azure · Docker Compose · PostgreSQL · GitHub Actions & Self-Hosted Gitea · Bash & PowerShell"
+    "stack": "C# / .NET · Linux (Systemd / Journalctl) · Terraform · AWS & Azure · Docker Compose · PostgreSQL · GitHub Actions & Self-Hosted Gitea · Bash & PowerShell"
   },
   "opTasks": {
     "fm1_1": "pending",

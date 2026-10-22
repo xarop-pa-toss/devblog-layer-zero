@@ -398,10 +398,10 @@
       logsPath: 'logs',
       giteaBaseUrl: '',
       giteaUser: 'xarop_pa_toss',
-      role: 'Infrastructure & DevOps Engineer',
-      summary: 'Systems and infrastructure engineer transitioning operational administration experience into reproducible Linux, cloud networking, Terraform IaC, Docker containerization, and automated CI/CD pipelines.',
+      role: 'Infrastructure & DevOps Engineer · .NET Developer',
+      summary: 'Systems and infrastructure engineer & dotnet dev transitioning operational administration experience into reproducible Linux, cloud networking, Terraform IaC, Docker containerization, and automated CI/CD pipelines.',
       pitch: 'Building Flaggo — a lightweight, self-hosted 4-app Feature Flag & Runtime Configuration Platform decoupling code deployment from feature release.',
-      stack: 'Linux (Systemd / Journalctl) · Terraform · AWS & Azure · Docker Compose · PostgreSQL · GitHub Actions & Self-Hosted Gitea · Bash & PowerShell'
+      stack: 'C# / .NET · Linux (Systemd / Journalctl) · Terraform · AWS & Azure · Docker Compose · PostgreSQL · GitHub Actions & Self-Hosted Gitea · Bash & PowerShell'
     };
 
     // --- FALLBACK LOG ENTRY (WHEN RUNNING FROM FILE:// BEFORE FETCHING ./logs/ OR GITHUB API) ---
@@ -743,6 +743,422 @@
       return `---\ntitle: "${post.title.replace(/"/g, '\\"')}"\ndate: "${post.date}"\ntags: [${(post.tags || []).join(', ')}]\nsummary: "${post.summary.replace(/"/g, '\\"')}"\n---\n\n${post.content}\n`;
     }
 
+    // --- KEEBS HARDWARE SPECIFICATIONS & DETAILED BUILD ARTICLES ---
+    const KEEB_LAYERS = [
+      { id: 0, name: 'Layer 0: Base / QWERTY', desc: 'Standard typing layer for prose, commands, and code' },
+      { id: 1, name: 'Layer 1: Nav & System', desc: 'Home row arrow cluster (HJKL), window tiling, audio, and function keys' },
+      { id: 2, name: 'Layer 2: Code & Symbols', desc: 'Brackets, braces, pipes, redirects, and LINQ / regex symbols under home row' }
+    ];
+
+    const LILY_LEFT_KEYS = [
+      // Row 0
+      [
+        { l0: 'Esc', l1: 'F1', l2: '~', mod: true },
+        { l0: '1', l1: 'F2', l2: '!' },
+        { l0: '2', l1: 'F3', l2: '@' },
+        { l0: '3', l1: 'F4', l2: '#' },
+        { l0: '4', l1: 'F5', l2: '$' },
+        { l0: '5', l1: 'F6', l2: '%' }
+      ],
+      // Row 1
+      [
+        { l0: 'Tab', l1: 'Caps', l2: '`', mod: true },
+        { l0: 'Q', l1: 'Home', l2: '{' },
+        { l0: 'W', l1: 'Up', l2: '}' },
+        { l0: 'E', l1: 'End', l2: '[' },
+        { l0: 'R', l1: 'PgUp', l2: ']' },
+        { l0: 'T', l1: 'Vol+', l2: '|' }
+      ],
+      // Row 2
+      [
+        { l0: 'Ctrl', l1: 'Ctrl', l2: 'Ctrl', mod: true },
+        { l0: 'A', l1: 'Left', l2: '(' },
+        { l0: 'S', l1: 'Down', l2: ')' },
+        { l0: 'D', l1: 'Right', l2: '=' },
+        { l0: 'F', l1: 'PgDn', l2: '+' },
+        { l0: 'G', l1: 'Vol-', l2: '&' }
+      ],
+      // Row 3
+      [
+        { l0: 'Shift', l1: 'Shift', l2: 'Shift', mod: true },
+        { l0: 'Z', l1: 'Mute', l2: '<' },
+        { l0: 'X', l1: 'Prev', l2: '>' },
+        { l0: 'C', l1: 'Play', l2: '-' },
+        { l0: 'V', l1: 'Next', l2: '_' },
+        { l0: 'B', l1: 'Prnt', l2: '*' }
+      ]
+    ];
+
+    const LILY_LEFT_THUMBS = [
+      { l0: 'Alt', l1: 'Alt', l2: 'Alt', mod: true },
+      { l0: 'GUI', l1: 'GUI', l2: 'GUI', mod: true },
+      { l0: 'Lower', l1: '[1]', l2: 'Lower', thumb: true },
+      { l0: 'Space', l1: 'Enter', l2: 'Space', thumb: true }
+    ];
+
+    const LILY_RIGHT_KEYS = [
+      // Row 0
+      [
+        { l0: '6', l1: 'F7', l2: '^' },
+        { l0: '7', l1: 'F8', l2: '&' },
+        { l0: '8', l1: 'F9', l2: '*' },
+        { l0: '9', l1: 'F10', l2: '(' },
+        { l0: '0', l1: 'F11', l2: ')' },
+        { l0: 'Del', l1: 'F12', l2: 'Del', mod: true }
+      ],
+      // Row 1
+      [
+        { l0: 'Y', l1: 'Insert', l2: '\\' },
+        { l0: 'U', l1: 'PgUp', l2: '?' },
+        { l0: 'I', l1: 'Up', l2: '/' },
+        { l0: 'O', l1: 'PgDn', l2: '"' },
+        { l0: 'P', l1: 'ScrLk', l2: '\'' },
+        { l0: 'Bksp', l1: 'Del', l2: 'Bksp', mod: true }
+      ],
+      // Row 2
+      [
+        { l0: 'H', l1: 'Home', l2: ':' },
+        { l0: 'J', l1: 'Left', l2: ';' },
+        { l0: 'K', l1: 'Down', l2: '+' },
+        { l0: 'L', l1: 'Right', l2: '-' },
+        { l0: ';', l1: 'End', l2: '=' },
+        { l0: '\'', l1: 'Menu', l2: '$', mod: true }
+      ],
+      // Row 3
+      [
+        { l0: 'N', l1: 'Task', l2: '!' },
+        { l0: 'M', l1: 'Wsp1', l2: '%' },
+        { l0: ',', l1: 'Wsp2', l2: '@' },
+        { l0: '.', l1: 'Wsp3', l2: '#' },
+        { l0: '/', l1: 'Term', l2: '^' },
+        { l0: 'Enter', l1: 'Enter', l2: 'Enter', mod: true }
+      ]
+    ];
+
+    const LILY_RIGHT_THUMBS = [
+      { l0: 'Enter', l1: 'Enter', l2: 'Enter', thumb: true },
+      { l0: 'Raise', l1: 'Raise', l2: '[2]', thumb: true },
+      { l0: 'GUI', l1: 'GUI', l2: 'GUI', mod: true },
+      { l0: 'Alt', l1: 'Alt', l2: 'Alt', mod: true }
+    ];
+
+    function renderKeycap(x, y, label, isMod, isThumb, keyId) {
+      const bg = isMod ? '#512B58' : isThumb ? '#79BAC1' : '#FFFFFF';
+      const textCol = isMod ? '#FFFFFF' : isThumb ? '#231926' : '#231926';
+      const borderCol = isMod ? '#331738' : isThumb ? '#512B58' : '#2A7886';
+      return h('g', { key: keyId },
+        h('rect', {
+          x, y, width: 22, height: 22, rx: 3,
+          fill: bg,
+          stroke: borderCol,
+          strokeWidth: 1.2,
+          style: { filter: 'drop-shadow(1px 1px 0px rgba(81, 43, 88, 0.22))' }
+        }),
+        h('text', {
+          x: x + 11, y: y + 14.5,
+          textAnchor: 'middle',
+          fontSize: label && label.length > 3 ? '7px' : '8.5px',
+          fontFamily: 'var(--font-mono)',
+          fontWeight: isMod || isThumb ? '700' : '600',
+          fill: textCol,
+          style: { userSelect: 'none', pointerEvents: 'none' }
+        }, label || '')
+      );
+    }
+
+    function Lily58Svg({ layer = 0 }) {
+      const leftColOffsets = [10, 5, 0, -5, 0, 5];
+      const rightColOffsets = [5, 0, -5, 0, 5, 10];
+      const leftKeys = [];
+      const rightKeys = [];
+
+      for (let r = 0; r < 4; r++) {
+        for (let c = 0; c < 6; c++) {
+          const k = LILY_LEFT_KEYS[r][c];
+          const x = 24 + c * 25;
+          const y = 46 + r * 25 + leftColOffsets[c];
+          const label = layer === 1 ? k.l1 : layer === 2 ? k.l2 : k.l0;
+          leftKeys.push(renderKeycap(x, y, label, k.mod, false, `l_r${r}_c${c}`));
+        }
+      }
+
+      LILY_LEFT_THUMBS.forEach((k, idx) => {
+        const x = 74 + idx * 25;
+        const y = idx === 0 ? 158 : idx === 1 ? 162 : 165;
+        const label = layer === 1 ? k.l1 : layer === 2 ? k.l2 : k.l0;
+        leftKeys.push(renderKeycap(x, y, label, k.mod, k.thumb, `l_thumb_${idx}`));
+      });
+
+      for (let r = 0; r < 4; r++) {
+        for (let c = 0; c < 6; c++) {
+          const k = LILY_RIGHT_KEYS[r][c];
+          const x = 485 + c * 25;
+          const y = 46 + r * 25 + rightColOffsets[c];
+          const label = layer === 1 ? k.l1 : layer === 2 ? k.l2 : k.l0;
+          rightKeys.push(renderKeycap(x, y, label, k.mod, false, `r_r${r}_c${c}`));
+        }
+      }
+
+      LILY_RIGHT_THUMBS.forEach((k, idx) => {
+        const x = 485 + idx * 25;
+        const y = idx === 0 ? 165 : idx === 1 ? 165 : idx === 2 ? 162 : 158;
+        const label = layer === 1 ? k.l1 : layer === 2 ? k.l2 : k.l0;
+        rightKeys.push(renderKeycap(x, y, label, k.mod, k.thumb, `r_thumb_${idx}`));
+      });
+
+      return h('svg', {
+        viewBox: '0 0 660 215',
+        style: { width: '100%', height: 'auto', display: 'block', backgroundColor: '#F1F3F4', border: '1.5px solid #2A7886' },
+        role: 'img',
+        ariaLabel: 'Lily58 Pro Split Ergonomic Keyboard Diagram'
+      },
+        // Grid pattern
+        h('defs', null,
+          h('pattern', { id: 'lilyGrid', width: '20', height: '20', patternUnits: 'userSpaceOnUse' },
+            h('path', { d: 'M 20 0 L 0 0 0 20', fill: 'none', stroke: 'rgba(121, 186, 193, 0.25)', strokeWidth: '0.8' })
+          )
+        ),
+        h('rect', { width: '660', height: '215', fill: 'url(#lilyGrid)' }),
+
+        // Left PCB Base Outline
+        h('path', {
+          d: 'M 16 38 Q 16 28 26 28 L 180 28 Q 192 28 196 40 L 236 40 Q 242 40 242 46 L 242 140 Q 242 148 234 154 L 180 196 Q 172 202 162 202 L 30 202 Q 16 202 16 188 Z',
+          fill: '#E8ECEF', stroke: '#2A7886', strokeWidth: '2',
+          style: { filter: 'drop-shadow(2px 3px 0px rgba(81, 43, 88, 0.15))' }
+        }),
+
+        // Right PCB Base Outline
+        h('path', {
+          d: 'M 424 40 L 464 40 Q 468 28 480 28 L 634 28 Q 644 28 644 38 L 644 188 Q 644 202 630 202 L 498 202 Q 488 202 480 196 L 426 154 Q 418 148 418 140 L 418 46 Q 418 40 424 40 Z',
+          fill: '#E8ECEF', stroke: '#2A7886', strokeWidth: '2',
+          style: { filter: 'drop-shadow(2px 3px 0px rgba(81, 43, 88, 0.15))' }
+        }),
+
+        // Screw standoffs
+        [
+          [22, 34], [174, 34], [236, 134], [22, 196], [156, 196],
+          [424, 134], [486, 34], [638, 34], [504, 196], [638, 196]
+        ].map(([sx, sy], i) =>
+          h('g', { key: `screw_${i}` },
+            h('circle', { cx: sx, cy: sy, r: '3.5', fill: '#D3D8DC', stroke: '#512B58', strokeWidth: '1' }),
+            h('line', { x1: sx - 2, y1: sy, x2: sx + 2, y2: sy, stroke: '#512B58', strokeWidth: '0.8' })
+          )
+        ),
+
+        // Left OLED Display
+        h('rect', { x: 180, y: 56, width: 26, height: 62, rx: '2', fill: '#141E24', stroke: '#79BAC1', strokeWidth: '1.5' }),
+        h('text', { x: 193, y: 72, textAnchor: 'middle', fontSize: '6px', fontFamily: 'var(--font-mono)', fill: '#79BAC1', fontWeight: '700' }, 'L0: BASE'),
+        h('text', { x: 193, y: 86, textAnchor: 'middle', fontSize: '6.5px', fontFamily: 'var(--font-mono)', fill: '#FFFFFF', fontWeight: '700' }, 'WPM:84'),
+        h('text', { x: 193, y: 104, textAnchor: 'middle', fontSize: '5.5px', fontFamily: 'var(--font-mono)', fill: '#79BAC1' }, 'QMK/VIAL'),
+
+        // Left RP2040 Microcontroller
+        h('rect', { x: 212, y: 52, width: 22, height: 72, rx: '2', fill: '#2A7886', stroke: '#512B58', strokeWidth: '1.2' }),
+        h('rect', { x: 218, y: 46, width: '10', height: '6', rx: '1', fill: '#79BAC1', stroke: '#512B58', strokeWidth: '0.8' }),
+        h('text', { x: 223, y: 88, textAnchor: 'middle', fontSize: '5px', fontFamily: 'var(--font-mono)', fill: '#FFFFFF', fontWeight: '700', transform: 'rotate(-90 223 88)' }, 'RP2040 PRO'),
+
+        // Left TRRS Jack
+        h('rect', { x: 216, y: 32, width: 14, height: 12, rx: '1', fill: '#512B58', stroke: '#2A7886', strokeWidth: '1' }),
+
+        // Right TRRS Jack
+        h('rect', { x: 430, y: 32, width: 14, height: 12, rx: '1', fill: '#512B58', stroke: '#2A7886', strokeWidth: '1' }),
+
+        // Right RP2040 Microcontroller
+        h('rect', { x: 426, y: 52, width: 22, height: 72, rx: '2', fill: '#2A7886', stroke: '#512B58', strokeWidth: '1.2' }),
+        h('rect', { x: 432, y: 46, width: '10', height: '6', rx: '1', fill: '#79BAC1', stroke: '#512B58', strokeWidth: '0.8' }),
+        h('text', { x: 437, y: 88, textAnchor: 'middle', fontSize: '5px', fontFamily: 'var(--font-mono)', fill: '#FFFFFF', fontWeight: '700', transform: 'rotate(90 437 88)' }, 'RP2040 SLV'),
+
+        // Right OLED Display
+        h('rect', { x: 454, y: 56, width: 26, height: 62, rx: '2', fill: '#141E24', stroke: '#79BAC1', strokeWidth: '1.5' }),
+        h('text', { x: 467, y: 72, textAnchor: 'middle', fontSize: '6px', fontFamily: 'var(--font-mono)', fill: '#79BAC1', fontWeight: '700' }, 'LAYER 0'),
+        h('text', { x: 467, y: 86, textAnchor: 'middle', fontSize: '6.5px', fontFamily: 'var(--font-mono)', fill: '#FFFFFF', fontWeight: '700' }, '58 KEYS'),
+        h('text', { x: 467, y: 104, textAnchor: 'middle', fontSize: '5.5px', fontFamily: 'var(--font-mono)', fill: '#79BAC1' }, 'xarop'),
+
+        // Coiled TRRS Spring Cable between halves
+        h('path', {
+          d: 'M 223 38 C 240 18, 255 12, 280 18 C 295 24, 305 10, 320 18 C 335 24, 345 10, 360 18 C 375 24, 385 10, 400 18 C 420 12, 425 24, 437 38',
+          fill: 'none', stroke: '#512B58', strokeWidth: '3.5', strokeLinecap: 'round'
+        }),
+        h('path', {
+          d: 'M 223 38 C 240 18, 255 12, 280 18 C 295 24, 305 10, 320 18 C 335 24, 345 10, 360 18 C 375 24, 385 10, 400 18 C 420 12, 425 24, 437 38',
+          fill: 'none', stroke: '#79BAC1', strokeWidth: '1.2', strokeDasharray: '4 4'
+        }),
+
+        // Keys
+        leftKeys,
+        rightKeys,
+
+        // Label Footer Bar inside SVG
+        h('rect', { x: '16', y: '202', width: '628', height: '1', fill: '#512B58' })
+      );
+    }
+
+    function Lotus58Svg({ layer = 0 }) {
+      const leftColOffsets = [10, 5, 0, -5, 0, 5];
+      const rightColOffsets = [5, 0, -5, 0, 5, 10];
+      const leftKeys = [];
+      const rightKeys = [];
+
+      for (let r = 0; r < 4; r++) {
+        for (let c = 0; c < 6; c++) {
+          const k = LILY_LEFT_KEYS[r][c];
+          const x = 24 + c * 25;
+          const y = 46 + r * 25 + leftColOffsets[c];
+          const label = layer === 1 ? k.l1 : layer === 2 ? k.l2 : k.l0;
+          leftKeys.push(renderKeycap(x, y, label, k.mod, false, `lotus_l_r${r}_c${c}`));
+        }
+      }
+
+      LILY_LEFT_THUMBS.forEach((k, idx) => {
+        // Lotus58 thumb cluster is ergonomically curved and rotated 12 deg
+        const x = 76 + idx * 24;
+        const y = idx === 0 ? 156 : idx === 1 ? 162 : idx === 2 ? 167 : 170;
+        const label = layer === 1 ? k.l1 : layer === 2 ? k.l2 : k.l0;
+        leftKeys.push(renderKeycap(x, y, label, k.mod, k.thumb, `lotus_l_th_${idx}`));
+      });
+
+      for (let r = 0; r < 4; r++) {
+        for (let c = 0; c < 6; c++) {
+          const k = LILY_RIGHT_KEYS[r][c];
+          const x = 485 + c * 25;
+          const y = 46 + r * 25 + rightColOffsets[c];
+          const label = layer === 1 ? k.l1 : layer === 2 ? k.l2 : k.l0;
+          rightKeys.push(renderKeycap(x, y, label, k.mod, false, `lotus_r_r${r}_c${c}`));
+        }
+      }
+
+      LILY_RIGHT_THUMBS.forEach((k, idx) => {
+        const x = 485 + idx * 24;
+        const y = idx === 0 ? 170 : idx === 1 ? 167 : idx === 2 ? 162 : 156;
+        const label = layer === 1 ? k.l1 : layer === 2 ? k.l2 : k.l0;
+        rightKeys.push(renderKeycap(x, y, label, k.mod, k.thumb, `lotus_r_th_${idx}`));
+      });
+
+      return h('svg', {
+        viewBox: '0 0 660 215',
+        style: { width: '100%', height: 'auto', display: 'block', backgroundColor: '#F1F3F4', border: '1.5px solid #512B58' },
+        role: 'img',
+        ariaLabel: 'Lotus58 Custom Split Keyboard Diagram with Dual Rotary Encoders'
+      },
+        // Matrix pattern
+        h('defs', null,
+          h('pattern', { id: 'lotusGrid', width: '20', height: '20', patternUnits: 'userSpaceOnUse' },
+            h('path', { d: 'M 20 0 L 0 0 0 20', fill: 'none', stroke: 'rgba(81, 43, 88, 0.18)', strokeWidth: '0.8' })
+          )
+        ),
+        h('rect', { width: '660', height: '215', fill: 'url(#lotusGrid)' }),
+
+        // Left FR4 Base Plate (Matte Dark Charcoal with Gold Traces)
+        h('path', {
+          d: 'M 16 38 Q 16 26 28 26 L 180 26 Q 192 26 198 34 L 240 34 Q 248 34 248 44 L 248 142 Q 248 150 238 158 L 184 200 Q 174 204 162 204 L 30 204 Q 16 204 16 190 Z',
+          fill: '#242F35', stroke: '#512B58', strokeWidth: '2.2',
+          style: { filter: 'drop-shadow(2px 3px 0px rgba(42, 120, 134, 0.25))' }
+        }),
+
+        // Right FR4 Base Plate
+        h('path', {
+          d: 'M 412 44 Q 412 34 420 34 L 462 34 Q 468 26 480 26 L 632 26 Q 644 26 644 38 L 644 190 Q 644 204 630 204 L 498 204 Q 486 204 476 200 L 422 158 Q 412 150 412 142 Z',
+          fill: '#242F35', stroke: '#512B58', strokeWidth: '2.2',
+          style: { filter: 'drop-shadow(2px 3px 0px rgba(42, 120, 134, 0.25))' }
+        }),
+
+        // Gold ENIG Silkscreen Lines (Lotus Motif)
+        h('path', {
+          d: 'M 188 170 Q 210 180 230 170 M 194 175 Q 210 186 226 175 M 210 160 L 210 188',
+          fill: 'none', stroke: '#D4AF37', strokeWidth: '1.2'
+        }),
+        h('path', {
+          d: 'M 430 170 Q 450 180 472 170 M 434 175 Q 450 186 466 175 M 450 160 L 450 188',
+          fill: 'none', stroke: '#D4AF37', strokeWidth: '1.2'
+        }),
+
+        // Left Rotary Encoder (Alps EC11 Knurled Aluminum Dial)
+        h('g', { transform: 'translate(195, 38)' },
+          h('circle', { cx: 0, cy: 0, r: '12', fill: '#79BAC1', stroke: '#512B58', strokeWidth: '1.8' }),
+          h('circle', { cx: 0, cy: 0, r: '9.5', fill: '#3E4F59', stroke: '#D4AF37', strokeWidth: '0.8' }),
+          h('circle', { cx: 0, cy: 0, r: '5', fill: '#512B58' }),
+          h('line', { x1: 0, y1: -9, x2: 0, y2: -3, stroke: '#79BAC1', strokeWidth: '2', strokeLinecap: 'round' }),
+          h('text', { x: 0, y: 19, textAnchor: 'middle', fontSize: '6px', fontFamily: 'var(--font-mono)', fill: '#79BAC1', fontWeight: '700' }, 'VOL/MUTE')
+        ),
+
+        // Right Rotary Encoder
+        h('g', { transform: 'translate(465, 38)' },
+          h('circle', { cx: 0, cy: 0, r: '12', fill: '#79BAC1', stroke: '#512B58', strokeWidth: '1.8' }),
+          h('circle', { cx: 0, cy: 0, r: '9.5', fill: '#3E4F59', stroke: '#D4AF37', strokeWidth: '0.8' }),
+          h('circle', { cx: 0, cy: 0, r: '5', fill: '#512B58' }),
+          h('line', { x1: 0, y1: -9, x2: 0, y2: -3, stroke: '#79BAC1', strokeWidth: '2', strokeLinecap: 'round' }),
+          h('text', { x: 0, y: 19, textAnchor: 'middle', fontSize: '6px', fontFamily: 'var(--font-mono)', fill: '#79BAC1', fontWeight: '700' }, 'SCRUB/GIT')
+        ),
+
+        // Left Smoked Acrylic Guard over OLED
+        h('rect', { x: 180, y: 64, width: 26, height: 58, rx: '2', fill: 'rgba(20, 30, 36, 0.95)', stroke: '#D4AF37', strokeWidth: '1.2' }),
+        h('text', { x: 193, y: 80, textAnchor: 'middle', fontSize: '6px', fontFamily: 'var(--font-mono)', fill: '#79BAC1', fontWeight: '700' }, 'LOTUS58'),
+        h('text', { x: 193, y: 94, textAnchor: 'middle', fontSize: '6.5px', fontFamily: 'var(--font-mono)', fill: '#FFFFFF', fontWeight: '700' }, 'VOL:65%'),
+        h('text', { x: 193, y: 110, textAnchor: 'middle', fontSize: '5.5px', fontFamily: 'var(--font-mono)', fill: '#D4AF37' }, 'ENC:OK'),
+
+        // Right Smoked Acrylic Guard over OLED
+        h('rect', { x: 454, y: 64, width: 26, height: 58, rx: '2', fill: 'rgba(20, 30, 36, 0.95)', stroke: '#D4AF37', strokeWidth: '1.2' }),
+        h('text', { x: 467, y: 80, textAnchor: 'middle', fontSize: '6px', fontFamily: 'var(--font-mono)', fill: '#79BAC1', fontWeight: '700' }, 'SCRUB:GIT'),
+        h('text', { x: 467, y: 94, textAnchor: 'middle', fontSize: '6.5px', fontFamily: 'var(--font-mono)', fill: '#FFFFFF', fontWeight: '700' }, 'LAYER 0'),
+        h('text', { x: 467, y: 110, textAnchor: 'middle', fontSize: '5.5px', fontFamily: 'var(--font-mono)', fill: '#D4AF37' }, 'TENT:10°'),
+
+        // Left & Right MCUs
+        h('rect', { x: 214, y: 56, width: 20, height: 68, rx: '2', fill: '#512B58', stroke: '#79BAC1', strokeWidth: '1' }),
+        h('text', { x: 224, y: 90, textAnchor: 'middle', fontSize: '5px', fontFamily: 'var(--font-mono)', fill: '#FFFFFF', fontWeight: '700', transform: 'rotate(-90 224 90)' }, 'NICE!NANO'),
+
+        h('rect', { x: 426, y: 56, width: 20, height: 68, rx: '2', fill: '#512B58', stroke: '#79BAC1', strokeWidth: '1' }),
+        h('text', { x: 436, y: 90, textAnchor: 'middle', fontSize: '5px', fontFamily: 'var(--font-mono)', fill: '#FFFFFF', fontWeight: '700', transform: 'rotate(90 436 90)' }, 'NICE!NANO'),
+
+        // Coiled TRRS Cable
+        h('path', {
+          d: 'M 224 38 C 240 18, 260 12, 285 18 C 300 24, 310 10, 325 18 C 340 24, 350 10, 365 18 C 380 24, 390 10, 405 18 C 420 12, 430 22, 436 38',
+          fill: 'none', stroke: '#2A7886', strokeWidth: '3.5', strokeLinecap: 'round'
+        }),
+
+        // Keys
+        leftKeys,
+        rightKeys
+      );
+    }
+
+    const KEEB_ARTICLES = [
+      {
+        id: 'lotus58',
+        name: 'Lotus58',
+        title: 'Lotus58: Evolution with Dual Rotary Encoders & Tented FR4 Plates',
+        subtitle: 'TweetyDaBird\'s enhanced revision featuring dual Alps EC11 encoders, angled thumb arcs, acrylic OLED shields, and rigid FR4 acoustic sandwich plates.',
+        date: '2026-10-12',
+        readTime: '8 min read',
+        tags: ['split-keeb', 'lotus58', 'rotary-encoders', 'fr4', 'vial'],
+        specs: [
+          { label: 'Form Factor', val: '58 Keys + 2x Alps EC11 Rotary Encoders' },
+          { label: 'Thumb Geometry', val: '12° Ergonomically Angled 4-Key Arc' },
+          { label: 'Encoders', val: '2x Alps EC11 (Push-Button + 24 Detents/Rev)' },
+          { label: 'Plates', val: 'Matte Black FR4 Composite with Gold ENIG Traces' },
+          { label: 'Case & Tenting', val: 'Acrylic Sandwich with 10° Anodized Tenting Legs' },
+          { label: 'Firmware', val: 'QMK / Vial with Dynamic Encoder Acceleration' }
+        ],
+        overview: 'Created by TweetyDaBird as a direct iteration of the Lily58, the Lotus58 solves two specific ergonomic critiques of the original: the reach of the outer thumb keys, and the integration of physical rotary encoders for fast media scrub and terminal navigation without sacrificing alpha switch positions.',
+        sections: [
+          {
+            heading: '1. The Evolution from Lily58 to Lotus58',
+            text: 'While the Lily58 has a relatively horizontal thumb row, the Lotus58 rotates the 4-key thumb cluster by 12 degrees to mirror the natural radial arc of the human thumb. This eliminates hyperextension when hitting layer shift or enter keys. Additionally, dedicated acrylic guard plates mount over the fragile 0.91" OLED screens to protect glass displays during travel.'
+          },
+          {
+            heading: '2. Dual Rotary Encoders in Day-to-Day Engineering',
+            text: 'The left knurled aluminum encoder controls system audio volume with smooth detents, and clicking the integrated switch instantly toggles microphone mute. The right encoder is mapped in Vial to dynamic terminal acceleration: a slow turn moves lines up and down in `git log --oneline` or `journalctl`, while a fast turn jumps full pages. In VS Code or Neovim, pushing the encoder toggles split window focus.'
+          },
+          {
+            heading: '3. Acoustic Rigidity with FR4 Plates & Boba U4T Switches',
+            text: 'Rather than standard laser-cut acrylic plates which can flex and produce higher-pitched clack, the Lotus58 uses custom matte black FR4 composite plates with copper ground planes. Paired with Boba U4T tactile switches (62g springs) lubricated with Tribosys 3203, each keystroke provides a deep, satisfying tactile bump without generating excessive noise in shared spaces.'
+          },
+          {
+            heading: '4. Portable Workstation Ergonomics & Tenting',
+            text: 'Tenting the split halves by 10 to 15 degrees eliminates forearm pronation entirely. The Lotus58 chassis incorporates threaded M2 brass standoffs that accept aluminum cone feet, giving rock-solid table stability while retaining a compact footprint that packs neatly into a laptop sleeve.'
+          }
+        ]
+      }
+    ];
+
     // --- UI COMPONENTS ---
     function StatusBadge({ status }) {
       if (status === STATUS.INDEPENDENT) {
@@ -942,6 +1358,10 @@
       const [selectedTag, setSelectedTag] = useState('all');
       const [searchQuery, setSearchQuery] = useState('');
       const [readingPost, setReadingPost] = useState(null);
+
+      // Keebs State (Hardware articles & Layer preview)
+      const [readingKeebArticle, setReadingKeebArticle] = useState(null);
+      const [keebLayer, setKeebLayer] = useState(0);
 
       // 1. Load canonical state.json committed to the repository
       async function loadCanonicalStateJson() {
@@ -1232,8 +1652,8 @@
         // Spacious OS Window Hero
         h('section', { className: 'os-window' },
           h('div', { className: 'os-titlebar' },
-            h('span', null, `SYSTEM // LAYER ZERO — ${bio.name.toUpperCase()} (@${bio.handle})`),
-            h('span', null, `GITHUB: ${bio.githubUser}`)
+            h('span', null, `Layer Zero — ${bio.name}`),
+            h('span', null, `@${bio.handle}`)
           ),
           h('div', { style: { padding: '2.25rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' } },
             h('div', { style: { maxWidth: '72ch', display: 'flex', flexDirection: 'column', gap: '0.85rem' } },
@@ -1261,15 +1681,20 @@
               }, `DevOps Roadmap (${progressStats.completionPercent}%)`),
               h('button', {
                 type: 'button',
+                onClick: () => setMainSection('keebs'),
+                className: 'os-btn os-btn-teal'
+              }, 'Keebs (Lily58 & Lotus58)'),
+              h('button', {
+                type: 'button',
                 onClick: () => setMainSection('projects'),
                 className: 'os-btn'
-              }, 'Flaggo Architecture & Repos'),
+              }, 'Other Stuff'),
               h('a', {
                 href: bio.githubUrl,
                 target: '_blank',
                 rel: 'noreferrer',
                 className: 'os-btn'
-              }, 'GitHub (xarop-pa-toss) ->')
+              }, 'GitHub ->')
             )
           )
         ),
@@ -1380,8 +1805,8 @@
       const renderOperationFlaggo = () => h('div', { style: { display: 'flex', flexDirection: 'column', gap: '2.25rem' } },
         h('section', { className: 'os-window' },
           h('div', { className: 'os-titlebar os-titlebar-teal' },
-            h('span', null, 'ASSESSMENT SPECIFICATION // OPERATION FLAGGO'),
-            h('span', null, 'AWS · LINUX · TERRAFORM · DOCKER · GITHUB ACTIONS')
+            h('span', null, 'Assessment Specification — Operation Flaggo'),
+            h('span', null, 'AWS · Linux · Terraform · Docker · CI/CD')
           ),
           h('div', { style: { padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' } },
             h('h1', { className: 'font-display', style: { fontSize: '1.9rem', fontWeight: 700, color: '#512B58' } },
@@ -1587,7 +2012,7 @@
         // Overview
         roadmapSubTab === 'dashboard' ? h('div', { style: { display: 'flex', flexDirection: 'column', gap: '1.75rem' } },
           h('div', { className: 'os-window' },
-            h('div', { className: 'os-titlebar os-titlebar-teal' }, h('span', null, 'ROADMAP OVERVIEW // RICARDO GIRO (xarop_pa_toss)')),
+            h('div', { className: 'os-titlebar os-titlebar-teal' }, h('span', null, 'Roadmap Overview — Ricardo Giro')),
             h('div', { style: { padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1rem' } },
               h('h2', { className: 'font-display', style: { fontSize: '1.65rem', fontWeight: 700, color: '#512B58' } },
                 '12-Week Infrastructure & DevOps Execution Plan'
@@ -1850,13 +2275,120 @@
         ) : null
       );
 
-      // --- SECTION 4: REAL GITHUB REPOSITORIES & FLAGGO 4-APP ARCHITECTURE ---
+      // --- SECTION: CUSTOM SPLIT MECHANICAL KEYBOARDS (LILY58 PRO & LOTUS58) ---
+      const renderKeebsSection = () => h('div', { style: { display: 'flex', flexDirection: 'column', gap: '2.5rem' } },
+        // Header Intro
+        h('section', { className: 'os-window' },
+          h('div', { className: 'os-titlebar' },
+            h('span', null, 'Custom Ergonomic Keyboards — Lily58 Pro & Lotus58'),
+            h('span', null, 'Hardware Builds · Columnar Stagger · QMK & Vial')
+          ),
+          h('div', { style: { padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' } },
+            h('div', { style: { maxWidth: '75ch', display: 'flex', flexDirection: 'column', gap: '0.75rem' } },
+              h('h1', { className: 'font-display', style: { fontSize: '1.9rem', fontWeight: 700, color: '#512B58' } },
+                'Ergonomic Split Keyboards for Systems Engineering'
+              ),
+              h('p', { style: { fontSize: '0.98rem', color: '#231926' } },
+                'Writing cloud infrastructure, managing Linux terminal sessions, and developing in .NET requires sustained typing comfort. Standard unibody keyboards cause ulnar deviation and forearm pronation. Split columnar ortholinear keyboards solve this by aligning keys with natural finger reach and separating the two halves to match shoulder width.'
+              ),
+              h('p', { style: { fontSize: '0.92rem', color: '#4E5D63' } },
+                'Explore the interactive hardware schematics below. Use the Layer Preview toggles to inspect how navigation (HJKL arrows) and coding symbols ({}, [], =>, |) are mapped to thumb-activated layers for zero hand strain.'
+              )
+            ),
+
+            // Layer Selector Bar for SVG Schematics
+            h('div', { className: 'os-panel', style: { padding: '0.85rem 1.15rem', display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' } },
+              h('div', { style: { display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' } },
+                h('span', { className: 'font-mono', style: { fontSize: '12px', fontWeight: 700, color: '#512B58' } }, 'LAYER PREVIEW:'),
+                ...KEEB_LAYERS.map(l =>
+                  h('button', {
+                    key: l.id,
+                    type: 'button',
+                    onClick: () => setKeebLayer(l.id),
+                    className: 'font-mono',
+                    style: {
+                      padding: '4px 10px',
+                      fontSize: '11.5px',
+                      backgroundColor: keebLayer === l.id ? '#512B58' : '#F1F3F4',
+                      color: keebLayer === l.id ? '#FFFFFF' : '#231926',
+                      border: keebLayer === l.id ? '1.5px solid #231926' : '1.5px solid #2A7886',
+                      boxShadow: keebLayer === l.id ? '2px 2px 0px #79BAC1' : 'none',
+                      fontWeight: keebLayer === l.id ? 700 : 500
+                    }
+                  }, l.name)
+                )
+              ),
+              h('div', { className: 'font-mono', style: { fontSize: '11.5px', color: '#2A7886' } },
+                KEEB_LAYERS[keebLayer].desc
+              )
+            )
+          )
+        ),
+
+        // Grid with the two Keyboard Cards & Articles
+        h('div', { className: 'grid-2' },
+          ...KEEB_ARTICLES.map(article =>
+            h('article', { key: article.id, className: 'os-window', style: { display: 'flex', flexDirection: 'column' } },
+              h('div', { className: 'os-titlebar os-titlebar-teal' },
+                h('span', null, `${article.name} — Hardware Specification`),
+                h('span', null, article.readTime)
+              ),
+              h('div', { style: { padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.25rem', flex: 1 } },
+                // Interactive SVG Schematic
+                h('div', { style: { borderRadius: '2px', overflow: 'hidden' } },
+                  article.id === 'lily58' ? h(Lily58Svg, { layer: keebLayer }) : h(Lotus58Svg, { layer: keebLayer })
+                ),
+
+                // Tags & Date
+                h('div', { className: 'font-mono', style: { fontSize: '11.5px', color: '#4E5D63', display: 'flex', flexWrap: 'wrap', gap: '0.5rem' } },
+                  h('span', { style: { color: '#512B58', fontWeight: 600 } }, article.date),
+                  ' · ',
+                  ...article.tags.map(t => h('span', { key: t, style: { color: '#2A7886' } }, `#${t}`))
+                ),
+
+                // Title & Subtitle
+                h('h2', { className: 'font-display', style: { fontSize: '1.4rem', fontWeight: 700, color: '#512B58' } },
+                  article.title
+                ),
+                h('p', { style: { fontSize: '0.93rem', color: '#231926' } }, article.subtitle),
+
+                // Specifications Mini-Table
+                h('div', { className: 'os-panel', style: { padding: '0.85rem 1rem', display: 'flex', flexDirection: 'column', gap: '0.4rem' } },
+                  ...article.specs.map(s =>
+                    h('div', { key: s.label, style: { display: 'flex', justifyContent: 'space-between', fontSize: '11.5px', gap: '0.5rem' } },
+                      h('span', { className: 'font-mono', style: { color: '#4E5D63' } }, s.label),
+                      h('span', { className: 'font-mono', style: { color: '#512B58', fontWeight: 600, textAlign: 'right' } }, s.val)
+                    )
+                  )
+                ),
+
+                // Overview snippet
+                h('p', { style: { fontSize: '0.9rem', color: '#4E5D63', flex: 1 } }, article.overview),
+
+                // Action Bar
+                h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '1rem', borderTop: '1px solid rgba(42, 120, 134, 0.3)' } },
+                  h('span', { className: 'font-mono', style: { fontSize: '11.5px', color: '#2A7886', fontWeight: 600 } },
+                    article.id === 'lotus58' ? 'Dual Alps Encoders + FR4' : 'OLED Telemetry + RP2040'
+                  ),
+                  h('button', {
+                    type: 'button',
+                    onClick: () => setReadingKeebArticle(article),
+                    className: 'os-btn os-btn-primary'
+                  }, 'Read Full Article')
+                )
+              )
+            )
+          )
+        )
+      );
+
+      // --- SECTION 4: REAL GITHUB REPOSITORIES & OTHER STUFF ---
       const renderProjectsAndRepos = () => h('div', { style: { display: 'flex', flexDirection: 'column', gap: '2.25rem' } },
         // Flaggo 4-App Architecture Specification
         h('section', { className: 'os-window' },
           h('div', { className: 'os-titlebar' },
-            h('span', null, 'ARCHITECTURE SPECIFICATION // FLAGGO (4-APP SOLUTION)'),
-            h('span', null, 'CONTROL PLANE + DATA PLANE + PERSISTENCE LAYER')
+            h('span', null, 'Flaggo Architecture (4-App Solution)'),
+            h('span', null, 'Control Plane · Data Plane · Persistence Layer')
           ),
           h('div', { style: { padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' } },
             h('div', { style: { maxWidth: '75ch', display: 'flex', flexDirection: 'column', gap: '0.75rem' } },
@@ -1904,7 +2436,7 @@
         // Live GitHub Repositories Fetched from https://api.github.com/users/xarop-pa-toss/repos
         h('section', { className: 'os-window' },
           h('div', { className: 'os-titlebar os-titlebar-teal' },
-            h('span', null, `LIVE GITHUB REPOSITORIES // github.com/${bio.githubUser}`),
+            h('span', null, 'Public Git Repositories'),
             h('button', { type: 'button', onClick: fetchLiveGitActivity, style: { color: '#FFFFFF', textDecoration: 'underline' } }, 'Refresh')
           ),
           h('div', { style: { padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' } },
@@ -1958,7 +2490,7 @@
       }, [githubCommits, giteaCommits, bio.githubUser, bio.giteaBaseUrl, bio.giteaUser, gitSyncStatus]);
 
       return h('div', { style: { minHeight: '100vh', display: 'flex', flexDirection: 'column' } },
-        // --- 3-ZONE TOP BAR: "Layer Zero" | 4 Nav Links | Bio Button ---
+        // --- 3-ZONE TOP BAR: "Layer Zero" | 5 Nav Links | Bio Button ---
         h('header', { className: 'top-bar' },
           h('button', {
             type: 'button',
@@ -1972,7 +2504,8 @@
               { id: 'logs', label: 'The Logs' },
               { id: 'roadmap', label: 'DevOps Roadmap' },
               { id: 'operation', label: 'Operation Flaggo' },
-              { id: 'projects', label: 'Flaggo & Repos' }
+              { id: 'keebs', label: 'Keebs' },
+              { id: 'projects', label: 'Other Stuff' }
             ].map(item =>
               h('button', {
                 key: item.id,
@@ -1987,7 +2520,7 @@
             type: 'button',
             onClick: () => setBioOpen(true),
             className: 'os-btn os-btn-primary'
-          }, 'Bio // Ricardo Giro')
+          }, 'Bio — Ricardo Giro')
         ),
 
         // --- MAIN WORKSPACE ---
@@ -1995,6 +2528,7 @@
           mainSection === 'logs' ? renderHomeLogs() :
           mainSection === 'roadmap' ? renderRoadmapSection() :
           mainSection === 'operation' ? renderOperationFlaggo() :
+          mainSection === 'keebs' ? renderKeebsSection() :
           renderProjectsAndRepos()
         ),
 
@@ -2002,7 +2536,7 @@
         bioOpen ? h('div', { className: 'modal-backdrop', role: 'dialog', ariaModal: 'true', ariaLabel: 'Bio — Ricardo Giro' },
           h('div', { className: 'os-window', style: { width: '100%', maxWidth: '640px' } },
             h('div', { className: 'os-titlebar' },
-              h('span', null, `BIO // ${bio.name.toUpperCase()} (@${bio.handle})`),
+              h('span', null, `Bio — ${bio.name} (@${bio.handle})`),
               h('button', { type: 'button', onClick: () => setBioOpen(false), style: { color: '#FFFFFF', fontWeight: 700 } }, '[X]')
             ),
             h('div', { style: { padding: '1.75rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' } },
@@ -2025,6 +2559,52 @@
               h('div', null,
                 h('div', { className: 'font-mono', style: { fontSize: '11.5px', color: '#4E5D63', marginBottom: '0.25rem' } }, 'CORE STACK'),
                 h('div', { className: 'font-mono', style: { fontSize: '12.5px', color: '#512B58' } }, bio.stack)
+              )
+            )
+          )
+        ) : null,
+
+        // --- KEEBS ARTICLE READER MODAL ---
+        readingKeebArticle ? h('div', { className: 'modal-backdrop', role: 'dialog', ariaModal: 'true', ariaLabel: readingKeebArticle.title },
+          h('div', { className: 'os-window', style: { width: '100%', maxWidth: '780px', maxHeight: '88vh', display: 'flex', flexDirection: 'column' } },
+            h('div', { className: 'os-titlebar os-titlebar-teal' },
+              h('span', null, `${readingKeebArticle.name} — Hardware Article & Build Log`),
+              h('button', { type: 'button', onClick: () => setReadingKeebArticle(null), style: { color: '#FFFFFF', fontWeight: 700 } }, '[X]')
+            ),
+            h('div', { style: { padding: '2rem', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1.5rem' } },
+              h('div', null,
+                h('div', { className: 'font-mono', style: { fontSize: '12px', color: '#2A7886', marginBottom: '0.35rem' } },
+                  `${readingKeebArticle.date} · ${readingKeebArticle.readTime} · ${(readingKeebArticle.tags || []).map(t => '#' + t).join(' ')}`
+                ),
+                h('h2', { className: 'font-display', style: { fontSize: '1.75rem', fontWeight: 700, color: '#512B58' } }, readingKeebArticle.title),
+                h('p', { style: { fontSize: '1rem', color: '#231926', marginTop: '0.5rem' } }, readingKeebArticle.subtitle)
+              ),
+
+              // Embedded interactive schematic
+              h('div', { style: { border: '1px solid #2A7886' } },
+                readingKeebArticle.id === 'lily58' ? h(Lily58Svg, { layer: keebLayer }) : h(Lotus58Svg, { layer: keebLayer })
+              ),
+
+              // Specs grid
+              h('div', { className: 'grid-2', style: { gap: '0.75rem' } },
+                ...readingKeebArticle.specs.map(s =>
+                  h('div', { key: s.label, className: 'os-panel', style: { padding: '0.65rem 0.85rem' } },
+                    h('div', { className: 'font-mono', style: { fontSize: '11px', color: '#4E5D63' } }, s.label),
+                    h('div', { className: 'font-mono', style: { fontSize: '12px', color: '#512B58', fontWeight: 600, marginTop: '2px' } }, s.val)
+                  )
+                )
+              ),
+
+              // Content sections
+              ...readingKeebArticle.sections.map(sec =>
+                h('section', { key: sec.heading, style: { display: 'flex', flexDirection: 'column', gap: '0.45rem' } },
+                  h('h3', { className: 'font-display', style: { fontSize: '1.25rem', fontWeight: 700, color: '#512B58' } }, sec.heading),
+                  h('p', { style: { fontSize: '0.96rem', lineHeight: 1.7, color: '#231926' } }, sec.text)
+                )
+              ),
+
+              h('div', { style: { display: 'flex', justifyContent: 'flex-end', paddingTop: '1.25rem', borderTop: '1px solid rgba(42, 120, 134, 0.3)' } },
+                h('button', { type: 'button', onClick: () => setReadingKeebArticle(null), className: 'os-btn os-btn-primary' }, 'Close Article')
               )
             )
           )
