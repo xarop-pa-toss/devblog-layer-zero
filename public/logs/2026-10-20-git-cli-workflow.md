@@ -5,6 +5,8 @@ tags: [git, layer-zero, gitops]
 summary: "How Layer Zero loads Markdown log entries from logs/*.md and roadmap/Operation Flaggo state from state.json committed to a Git repo."
 ---
 
+test!!
+
 Layer Zero is strictly read-only on the web. 
 Every visitor sees the exact canonical state committed to the [Git repository](https://github.com/xarop-pa-toss/devblog-layer-zero).
 There's no admin panel or secret edit mode activation and this is by design!
