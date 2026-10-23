@@ -22,10 +22,9 @@ summary: "Isolating the Control Plane API, Data Plane evaluator, and PostgreSQL 
 
 Post body here...
 ```
-
 ---
 
 Since Layer Zero is both a personal blog and a place for me to keep track of my roadmaps, I have added simple states to each task.
 Editing those is just as simple! There is a state.json file where I change the flags per task ID, the objective being to have all of them as Independent.
 
-   Finally, all that's needed is to push the changes to the repo and Github handles the rest... for now :)
+Finally, all that's needed is to push the changes to the repo and Github handles the rest... for now :)
