@@ -408,12 +408,12 @@
     const INITIAL_LOGS = [
       {
         id: 'log-git-cli-workflow',
-        title: 'Managing Layer Zero Logs & Roadmap Progress via Git CLI',
+        title: 'On GitOps, or how I run this blog using Git!',
         date: '2026-10-20',
-        tags: ['git', 'github', 'gitea', 'layer-zero', 'flaggo'],
+        tags: ['git', 'layer-zero', 'gitops'],
         source: 'logs/2026-10-20-git-cli-workflow.md',
-        summary: 'How Layer Zero loads Markdown log entries from logs/*.md and roadmap/Operation Flaggo state from state.json committed directly via Git CLI.',
-        content: `Layer Zero is strictly read-only on the web. Every visitor sees the exact canonical state committed to the Git repository—no browser localStorage overrides or exposed editing forms.\n\n1. Publishing a New Log Entry (logs/*.md):\nCreate a Markdown file inside the "logs/" folder of your repository with YAML frontmatter (title, date, tags, summary) and push via git CLI. Layer Zero automatically discovers and renders all .md files inside logs/.\n\n2. Updating Operation Flaggo & Roadmap Progress (state.json):\nOpen "state.json" in your editor, set any task ID (e.g. "fm1_1", "w0_1") or gate ID ("fg_m1", "g0") to "pending", "ai_assisted", or "independent", and run:\ngit add state.json && git commit -m "chore(roadmap): update progress" && git push`
+        summary: 'How Layer Zero loads Markdown log entries from logs/*.md and roadmap/Operation Flaggo state from state.json committed to a Git repo.',
+        content: `Layer Zero is strictly read-only on the web. \nEvery visitor sees the exact canonical state committed to the [Git repository](https://github.com/xarop-pa-toss/devblog-layer-zero).\nThere's no admin panel or secret edit mode activation and this is by design!\n\nThis greatly simplifies the process of adding posts as .md files, that contain some additional data in YAML format for the backend to parse.\nA small example below:\n\n\`\`\`markdown\n---\ntitle: "Flaggo Milestone 1 — Local 4-App Docker Compose Topology"\ndate: "2026-10-21"\ntags: [flaggo, docker, linux, devops]\nsummary: "Isolating the Control Plane API, Data Plane evaluator, and PostgreSQL behind a single published gateway port."\n---\n\nPost body here...\n\`\`\`\n---\n\nSince Layer Zero is both a personal blog and a place for me to keep track of my roadmaps, I have added simple states to each task.\nEditing those is just as simple! There is a state.json file where I change the flags per task ID, the objective being to have all of them as Independent.\n\nFinally, all that's needed is to push the changes to the repo and Github handles the rest... for now :)`
       }
     ];
 
@@ -698,9 +698,9 @@
       { id: 'c_D', name: 'D: Jr DevOps Stretch', titles: 'Jr DevOps (Only after Flaggo delivery/IaC gates pass)', target: 10 }
     ];
 
-    // --- MARKDOWN FRONTMATTER PARSER FOR REAL GIT REPO POSTS ---
+    // --- MARKDOWN FRONTMATTER PARSER & RENDERER FOR REAL GIT REPO POSTS ---
     function parseMarkdownWithFrontmatter(rawText, fallbackName) {
-      const trimmed = String(rawText || '').trim();
+      const trimmed = String(rawText || '').replace(/\r\n/g, '\n').trim();
       const result = {
         title: String(fallbackName || 'Untitled Log').replace(/\.(md|txt)$/i, '').replace(/[-_]/g, ' '),
         date: new Date().toISOString().split('T')[0],
@@ -710,10 +710,11 @@
       };
 
       if (trimmed.startsWith('---')) {
-        const endIdx = trimmed.indexOf('\n---', 3);
-        if (endIdx !== -1) {
+        const endMatch = trimmed.slice(3).match(/\n---\s*(\n|$)/);
+        if (endMatch) {
+          const endIdx = 3 + endMatch.index;
           const fmBlock = trimmed.slice(3, endIdx).trim();
-          const body = trimmed.slice(endIdx + 4).trim();
+          const body = trimmed.slice(endIdx + endMatch[0].length).trim();
           result.content = body;
           fmBlock.split('\n').forEach(line => {
             const colon = line.indexOf(':');
@@ -741,6 +742,325 @@
 
     function buildMarkdownFileContent(post) {
       return `---\ntitle: "${post.title.replace(/"/g, '\\"')}"\ndate: "${post.date}"\ntags: [${(post.tags || []).join(', ')}]\nsummary: "${post.summary.replace(/"/g, '\\"')}"\n---\n\n${post.content}\n`;
+    }
+
+    function renderInlineMarkdown(text, keyPrefix = 'inl') {
+      if (!text) return null;
+      const str = String(text);
+      const tokenRegex = /(!\[([^\]]*)\]\(([^)]+)\))|(\[([^\]]+)\]\(([^)]+)\))|(`([^`]+)`)|(\*\*\*([^*]+)\*\*\*)|(\*\*([^*]+)\*\*)|(__([^_]+)__)|(\*([^*]+)\*)|(_([^_]+)_)/g;
+      const nodes = [];
+      let lastIndex = 0;
+      let match;
+      let idx = 0;
+
+      while ((match = tokenRegex.exec(str)) !== null) {
+        if (match.index > lastIndex) {
+          nodes.push(str.slice(lastIndex, match.index));
+        }
+        const key = `${keyPrefix}-${idx++}`;
+        if (match[1]) {
+          // Image: ![alt](url)
+          nodes.push(h('img', {
+            key,
+            src: match[3],
+            alt: match[2] || '',
+            style: {
+              maxWidth: '100%',
+              height: 'auto',
+              border: '1.5px solid #2A7886',
+              boxShadow: '3px 3px 0px rgba(81, 43, 88, 0.16)',
+              margin: '0.65rem 0',
+              display: 'block'
+            }
+          }));
+        } else if (match[4]) {
+          // Link: [label](url)
+          nodes.push(h('a', {
+            key,
+            href: match[6],
+            target: '_blank',
+            rel: 'noreferrer',
+            style: {
+              color: '#2A7886',
+              fontWeight: 600,
+              textDecoration: 'underline',
+              textUnderlineOffset: '3px'
+            }
+          }, match[5]));
+        } else if (match[7]) {
+          // Inline code: `code`
+          nodes.push(h('code', {
+            key,
+            className: 'font-mono',
+            style: {
+              backgroundColor: '#E6ECEE',
+              color: '#512B58',
+              padding: '0.12rem 0.42rem',
+              fontSize: '0.88em',
+              border: '1px solid rgba(42, 120, 134, 0.35)',
+              fontWeight: 500
+            }
+          }, match[8]));
+        } else if (match[9]) {
+          // Bold + Italic: ***text***
+          nodes.push(h('strong', { key, style: { fontWeight: 700, fontStyle: 'italic', color: '#512B58' } }, match[10]));
+        } else if (match[11] || match[13]) {
+          // Bold: **text** or __text__
+          nodes.push(h('strong', { key, style: { fontWeight: 700, color: '#512B58' } }, match[12] || match[14]));
+        } else if (match[15] || match[17]) {
+          // Italic: *text* or _text_
+          nodes.push(h('em', { key, style: { fontStyle: 'italic' } }, match[16] || match[18]));
+        }
+        lastIndex = tokenRegex.lastIndex;
+      }
+
+      if (lastIndex < str.length) {
+        nodes.push(str.slice(lastIndex));
+      }
+      return nodes.length === 1 && typeof nodes[0] === 'string' ? nodes[0] : nodes;
+    }
+
+    function MarkdownRenderer({ content }) {
+      const normalized = String(content || '').replace(/\r\n/g, '\n');
+      const lines = normalized.split('\n');
+      const blocks = [];
+      let i = 0;
+
+      const isBlockStarter = (line) => {
+        const t = line.trim();
+        if (!t) return true;
+        if (t.startsWith('```')) return true;
+        if (/^(---|___|\*\*\*)\s*$/.test(t)) return true;
+        if (/^#{1,6}\s+/.test(t)) return true;
+        if (t.startsWith('>')) return true;
+        if (/^\s*[-*+]\s+/.test(line)) return true;
+        if (/^\s*\d+\.\s+/.test(line)) return true;
+        return false;
+      };
+
+      while (i < lines.length) {
+        const line = lines[i];
+        const trimmed = line.trim();
+
+        // 1. Blank line
+        if (!trimmed) {
+          i++;
+          continue;
+        }
+
+        // 2. Fenced Code Block (```lang ... ```)
+        if (trimmed.startsWith('```')) {
+          const lang = trimmed.slice(3).trim() || 'code';
+          i++;
+          const codeLines = [];
+          while (i < lines.length && !lines[i].trim().startsWith('```')) {
+            codeLines.push(lines[i]);
+            i++;
+          }
+          if (i < lines.length && lines[i].trim().startsWith('```')) {
+            i++;
+          }
+          blocks.push(
+            h('div', {
+              key: `md-code-${blocks.length}`,
+              style: {
+                border: '1.5px solid #2A7886',
+                backgroundColor: '#231926',
+                color: '#F1F3F4',
+                boxShadow: '3px 3px 0px rgba(81, 43, 88, 0.16)',
+                margin: '0.35rem 0'
+              }
+            },
+              h('div', {
+                className: 'font-mono',
+                style: {
+                  backgroundColor: '#512B58',
+                  color: '#F1F3F4',
+                  padding: '0.35rem 0.9rem',
+                  fontSize: '11px',
+                  fontWeight: 600,
+                  borderBottom: '1px solid #2A7886',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center'
+                }
+              },
+                h('span', null, lang.toUpperCase()),
+                h('span', { style: { color: '#79BAC1', fontSize: '10.5px' } }, 'MARKDOWN CODE BLOCK')
+              ),
+              h('pre', {
+                className: 'font-mono',
+                style: {
+                  margin: 0,
+                  padding: '1.1rem 1.25rem',
+                  fontSize: '0.88rem',
+                  lineHeight: 1.65,
+                  overflowX: 'auto',
+                  color: '#F1F3F4',
+                  whiteSpace: 'pre'
+                }
+              }, h('code', null, codeLines.join('\n')))
+            )
+          );
+          continue;
+        }
+
+        // 3. Horizontal Rule (---, ___, ***)
+        if (/^(---|___|\*\*\*)\s*$/.test(trimmed)) {
+          blocks.push(
+            h('hr', {
+              key: `md-hr-${blocks.length}`,
+              style: {
+                border: 0,
+                borderTop: '2px solid rgba(42, 120, 134, 0.45)',
+                margin: '0.75rem 0'
+              }
+            })
+          );
+          i++;
+          continue;
+        }
+
+        // 4. Headings (# through ######)
+        const headingMatch = trimmed.match(/^(#{1,6})\s+(.*)$/);
+        if (headingMatch) {
+          const level = headingMatch[1].length;
+          const text = headingMatch[2];
+          const fontSizes = { 1: '1.55rem', 2: '1.35rem', 3: '1.18rem', 4: '1.05rem', 5: '0.98rem', 6: '0.92rem' };
+          const tag = `h${Math.min(level + 1, 6)}`;
+          blocks.push(
+            h(tag, {
+              key: `md-h-${blocks.length}`,
+              className: 'font-display',
+              style: {
+                fontSize: fontSizes[level] || '1.1rem',
+                fontWeight: 700,
+                color: level <= 2 ? '#512B58' : '#2A7886',
+                marginTop: '0.5rem',
+                marginBottom: '0.15rem',
+                paddingBottom: level <= 2 ? '0.35rem' : 0,
+                borderBottom: level <= 2 ? '1px solid rgba(42, 120, 134, 0.3)' : 'none'
+              }
+            }, renderInlineMarkdown(text, `h-${blocks.length}`))
+          );
+          i++;
+          continue;
+        }
+
+        // 5. Blockquote (> ...)
+        if (trimmed.startsWith('>')) {
+          const quoteLines = [];
+          while (i < lines.length && lines[i].trim().startsWith('>')) {
+            quoteLines.push(lines[i].trim().replace(/^>\s?/, ''));
+            i++;
+          }
+          blocks.push(
+            h('blockquote', {
+              key: `md-q-${blocks.length}`,
+              className: 'os-panel',
+              style: {
+                margin: '0.25rem 0',
+                padding: '0.9rem 1.25rem',
+                borderLeft: '5px solid #2A7886',
+                backgroundColor: '#F1F3F4',
+                color: '#231926',
+                fontSize: '0.96rem',
+                lineHeight: 1.7
+              }
+            }, renderInlineMarkdown(quoteLines.join(' '), `q-${blocks.length}`))
+          );
+          continue;
+        }
+
+        // 6. Unordered List (- / * / +)
+        if (/^\s*[-*+]\s+/.test(line)) {
+          const items = [];
+          while (i < lines.length && /^\s*[-*+]\s+/.test(lines[i])) {
+            items.push(lines[i].replace(/^\s*[-*+]\s+/, ''));
+            i++;
+          }
+          blocks.push(
+            h('ul', {
+              key: `md-ul-${blocks.length}`,
+              style: {
+                margin: '0.25rem 0',
+                paddingLeft: '1.5rem',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0.45rem',
+                listStyleType: 'square',
+                color: '#231926',
+                fontSize: '1rem',
+                lineHeight: 1.7
+              }
+            }, items.map((item, idx) =>
+              h('li', { key: idx }, renderInlineMarkdown(item, `ul-${blocks.length}-${idx}`))
+            ))
+          );
+          continue;
+        }
+
+        // 7. Ordered List (1. 2. ...)
+        if (/^\s*\d+\.\s+/.test(line)) {
+          const items = [];
+          while (i < lines.length && /^\s*\d+\.\s+/.test(lines[i])) {
+            items.push(lines[i].replace(/^\s*\d+\.\s+/, ''));
+            i++;
+          }
+          blocks.push(
+            h('ol', {
+              key: `md-ol-${blocks.length}`,
+              style: {
+                margin: '0.25rem 0',
+                paddingLeft: '1.5rem',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0.45rem',
+                listStyleType: 'decimal',
+                color: '#231926',
+                fontSize: '1rem',
+                lineHeight: 1.7
+              }
+            }, items.map((item, idx) =>
+              h('li', { key: idx }, renderInlineMarkdown(item, `ol-${blocks.length}-${idx}`))
+            ))
+          );
+          continue;
+        }
+
+        // 8. Standard Paragraph (preserves explicit single line breaks as <br/>)
+        const paraLines = [];
+        while (i < lines.length && !isBlockStarter(lines[i])) {
+          paraLines.push(lines[i]);
+          i++;
+        }
+        if (paraLines.length > 0) {
+          const paraChildren = [];
+          paraLines.forEach((pLine, pIdx) => {
+            if (pIdx > 0) paraChildren.push(h('br', { key: `br-${pIdx}` }));
+            paraChildren.push(renderInlineMarkdown(pLine, `p-${blocks.length}-${pIdx}`));
+          });
+          blocks.push(
+            h('p', {
+              key: `md-p-${blocks.length}`,
+              style: {
+                margin: 0,
+                fontSize: '1.02rem',
+                lineHeight: 1.75,
+                color: '#231926'
+              }
+            }, ...paraChildren)
+          );
+        }
+      }
+
+      return h('div', {
+        style: {
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '1.1rem'
+        }
+      }, ...blocks);
     }
 
     // --- KEEBS HARDWARE SPECIFICATIONS & DETAILED BUILD ARTICLES ---
@@ -2849,16 +3169,28 @@
         ) : null,
 
         // --- LOG READER MODAL ---
-        readingPost ? h('div', { className: 'modal-backdrop', role: 'dialog', ariaModal: 'true', ariaLabel: readingPost.title },
-          h('div', { className: 'os-window', style: { width: '100%', maxWidth: '740px', maxHeight: '85vh', display: 'flex', flexDirection: 'column' } },
+        readingPost ? h('div', {
+          className: 'modal-backdrop',
+          role: 'dialog',
+          ariaModal: 'true',
+          ariaLabel: readingPost.title,
+          onClick: (e) => { if (e.target === e.currentTarget) setReadingPost(null); }
+        },
+          h('div', {
+            className: 'os-window',
+            style: { width: '95vw', maxWidth: '1040px', maxHeight: '88vh', display: 'flex', flexDirection: 'column' }
+          },
             h('div', { className: 'os-titlebar os-titlebar-teal' },
               h('span', null, `${readingPost.date} · ${(readingPost.tags || []).map(t => '#' + t).join(' / ')}`),
               h('button', { type: 'button', onClick: () => setReadingPost(null), style: { color: '#FFFFFF', fontWeight: 700 } }, '[X]')
             ),
-            h('div', { style: { padding: '2rem', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1.25rem' } },
-              h('h2', { className: 'font-display', style: { fontSize: '1.65rem', fontWeight: 700, color: '#512B58' } }, readingPost.title),
-              h('div', { style: { whiteSpace: 'pre-line', fontSize: '0.98rem', lineHeight: 1.7, color: '#231926' } }, readingPost.content),
-              h('div', { style: { display: 'flex', justifyContent: 'space-between', paddingTop: '1rem', borderTop: '1px solid rgba(42, 120, 134, 0.3)' } },
+            h('div', { style: { padding: '2.25rem 2.5rem', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1.35rem' } },
+              h('div', { style: { paddingBottom: '0.85rem', borderBottom: '2px solid #512B58' } },
+                h('h2', { className: 'font-display', style: { fontSize: '1.85rem', fontWeight: 700, color: '#512B58', lineHeight: 1.2 } }, readingPost.title),
+                readingPost.source ? h('div', { className: 'font-mono', style: { fontSize: '11.5px', color: '#4E5D63', marginTop: '0.35rem' } }, `Source: ${readingPost.source}`) : null
+              ),
+              h(MarkdownRenderer, { content: readingPost.content }),
+              h('div', { style: { display: 'flex', justifyContent: 'space-between', paddingTop: '1.25rem', marginTop: '0.5rem', borderTop: '1px solid rgba(42, 120, 134, 0.3)' } },
                 h('button', { type: 'button', onClick: () => downloadPostAsMarkdown(readingPost), className: 'os-btn' }, 'Download .md File'),
                 h('button', { type: 'button', onClick: () => setReadingPost(null), className: 'os-btn os-btn-primary' }, 'Close')
               )
