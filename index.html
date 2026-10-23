@@ -1354,6 +1354,19 @@
       const [gitSyncStatus, setGitSyncStatus] = useState('');
       const [repoLogsStatus, setRepoLogsStatus] = useState('');
 
+      // GitOps Auto-Update Telemetry State
+      const [gitOpsSync, setGitOpsSync] = useState({
+        status: 'idle', // 'idle' | 'syncing' | 'synced' | 'fallback'
+        source: 'local', // 'github' | 'local'
+        repo: 'xarop-pa-toss/layer-zero',
+        branch: 'main',
+        lastCommitSha: '',
+        lastCommitMsg: '',
+        lastCommitDate: '',
+        lastSyncedAt: '',
+        logCount: 0
+      });
+
       // Read-Only Logs Filter & Reader State
       const [selectedTag, setSelectedTag] = useState('all');
       const [searchQuery, setSearchQuery] = useState('');
@@ -1363,50 +1376,114 @@
       const [readingKeebArticle, setReadingKeebArticle] = useState(null);
       const [keebLayer, setKeebLayer] = useState(0);
 
-      // 1. Load canonical state.json committed to the repository
-      async function loadCanonicalStateJson() {
-        try {
-          const res = await fetch('./state.json', { cache: 'no-store' });
-          if (res.ok) {
-            const data = await res.json();
-            if (data.bio) setBio(prev => ({ ...prev, ...data.bio }));
-            if (data.tasks) setTasks(data.tasks);
-            if (data.gates) setGates(data.gates);
-            if (data.opTasks) setOpTasks(data.opTasks);
-            if (data.opGates) setOpGates(data.opGates);
-            if (data.deliverables) setDeliverables(data.deliverables);
-            if (data.assessments) setAssessments(data.assessments);
-            if (data.branch !== undefined) setBranch(data.branch);
-            if (data.portfolio) setPortfolio(data.portfolio);
-            if (data.applications) setApplications(data.applications);
-          }
-        } catch (e) {
-          // Uses built-in defaults if opened directly via file://
-        }
+      // Helper to apply canonical state values to React state
+      function applyCanonicalState(data) {
+        if (!data || typeof data !== 'object') return;
+        if (data.bio) setBio(prev => ({ ...prev, ...data.bio }));
+        if (data.tasks) setTasks(data.tasks);
+        if (data.gates) setGates(data.gates);
+        if (data.opTasks) setOpTasks(data.opTasks);
+        if (data.opGates) setOpGates(data.opGates);
+        if (data.deliverables) setDeliverables(data.deliverables);
+        if (data.assessments) setAssessments(data.assessments);
+        if (data.branch !== undefined) setBranch(data.branch);
+        if (data.portfolio) setPortfolio(data.portfolio);
+        if (data.applications) setApplications(data.applications);
       }
 
-      // 2. Load real Markdown logs from ./logs/index.json AND GitHub Contents API
-      async function loadLogsFromGit(currentBio) {
-        const activeBio = currentBio || bio;
+      // 1. Load canonical state.json: tries GitHub Raw CDN first (instant GitOps), then local ./state.json
+      async function loadCanonicalStateJson(targetRepo) {
+        const repoSlug = (targetRepo || bio.logsRepo || 'xarop-pa-toss/layer-zero').trim();
+        const cacheBuster = Date.now();
+        let syncSource = 'local';
+        let loaded = false;
+
+        // Primary: GitHub Raw CDN (direct from main branch)
+        if (repoSlug && repoSlug.includes('/')) {
+          const rawEndpoints = [
+            `https://raw.githubusercontent.com/${repoSlug}/main/public/state.json?t=${cacheBuster}`,
+            `https://raw.githubusercontent.com/${repoSlug}/main/state.json?t=${cacheBuster}`
+          ];
+          for (const url of rawEndpoints) {
+            try {
+              const res = await fetch(url, { cache: 'no-store' });
+              if (res.ok) {
+                const data = await res.json();
+                if (data && (data.bio || data.tasks || data.opTasks)) {
+                  applyCanonicalState(data);
+                  syncSource = 'github';
+                  loaded = true;
+                  break;
+                }
+              }
+            } catch (e) {}
+          }
+        }
+
+        // Fallback: bundled local ./state.json
+        if (!loaded) {
+          try {
+            const res = await fetch(`./state.json?t=${cacheBuster}`, { cache: 'no-store' });
+            if (res.ok) {
+              const data = await res.json();
+              applyCanonicalState(data);
+              syncSource = 'local';
+              loaded = true;
+            }
+          } catch (e) {}
+        }
+
+        return syncSource;
+      }
+
+      // 2. Fetch latest commit on main branch for live GitOps status indicator
+      async function fetchLatestRepoCommit(targetRepo) {
+        const repoSlug = (targetRepo || bio.logsRepo || 'xarop-pa-toss/layer-zero').trim();
+        if (!repoSlug || !repoSlug.includes('/')) return null;
+        try {
+          const res = await fetch(`https://api.github.com/repos/${repoSlug}/commits?per_page=1`, {
+            headers: { 'Accept': 'application/vnd.github.v3+json' },
+            cache: 'no-store'
+          });
+          if (res.ok) {
+            const cList = await res.json();
+            if (Array.isArray(cList) && cList.length > 0) {
+              const c = cList[0];
+              return {
+                sha: c.sha ? c.sha.slice(0, 7) : '',
+                fullSha: c.sha || '',
+                message: c.commit && c.commit.message ? c.commit.message.split('\n')[0] : 'commit',
+                date: c.commit && c.commit.author && c.commit.author.date ? c.commit.author.date.split('T')[0] : ''
+              };
+            }
+          }
+        } catch (e) {}
+        return null;
+      }
+
+      // 3. Load real Markdown logs from GitHub Contents API + local bundled logs
+      async function loadLogsFromGit(targetRepo, targetFolder) {
+        const repoSlug = (targetRepo || bio.logsRepo || 'xarop-pa-toss/layer-zero').trim();
+        const folderPath = (targetFolder || bio.logsPath || 'logs').trim().replace(/^\/+|\/+$/g, '');
         const loadedPosts = [];
-        const seenIds = new Set();
+        const seenNames = new Set();
+        const cacheBuster = Date.now();
 
         // Step A: Load local repo Markdown files listed in ./logs/index.json
         try {
-          const idxRes = await fetch('./logs/index.json', { cache: 'no-store' });
+          const idxRes = await fetch(`./logs/index.json?t=${cacheBuster}`, { cache: 'no-store' });
           if (idxRes.ok) {
             const fileList = await idxRes.json();
             if (Array.isArray(fileList)) {
               for (const fileName of fileList) {
                 try {
-                  const mdRes = await fetch(`./logs/${fileName}`, { cache: 'no-store' });
+                  const mdRes = await fetch(`./logs/${fileName}?t=${cacheBuster}`, { cache: 'no-store' });
                   if (mdRes.ok) {
                     const rawText = await mdRes.text();
                     const parsed = parseMarkdownWithFrontmatter(rawText, fileName);
-                    const id = `repo-md-${fileName}`;
-                    seenIds.add(fileName);
+                    seenNames.add(fileName);
                     loadedPosts.push({
-                      id,
+                      id: `local-md-${fileName}`,
                       title: parsed.title,
                       date: parsed.date,
                       tags: parsed.tags,
@@ -1421,39 +1498,48 @@
           }
         } catch (e) {}
 
-        // Step B: Also check GitHub Contents API for any .md files pushed to logsRepo/logsPath
-        const repoSlug = (activeBio.logsRepo || '').trim();
-        const folderPath = (activeBio.logsPath || 'logs').trim().replace(/^\/+|\/+$/g, '');
+        // Step B: Check GitHub Contents API for markdown files in public/logs and logs
         if (repoSlug && repoSlug.includes('/')) {
-          try {
-            const url = `https://api.github.com/repos/${repoSlug}/contents/${folderPath}`;
-            const res = await fetch(url, { headers: { 'Accept': 'application/vnd.github.v3+json' } });
-            if (res.ok) {
-              const items = await res.json();
-              if (Array.isArray(items)) {
-                const mdFiles = items.filter(f => f.type === 'file' && /\.(md|markdown|txt)$/i.test(f.name));
-                for (const fileItem of mdFiles.slice(0, 25)) {
-                  if (!seenIds.has(fileItem.name) && fileItem.download_url) {
-                    const rawRes = await fetch(fileItem.download_url);
-                    if (rawRes.ok) {
-                      const rawText = await rawRes.text();
-                      const parsed = parseMarkdownWithFrontmatter(rawText, fileItem.name);
-                      seenIds.add(fileItem.name);
-                      loadedPosts.push({
-                        id: 'gh-md-' + fileItem.sha,
-                        title: parsed.title,
-                        date: parsed.date,
-                        tags: parsed.tags,
-                        source: `${repoSlug}/${fileItem.path}`,
-                        summary: parsed.summary,
-                        content: parsed.content
-                      });
+          const candidatePaths = [
+            `public/${folderPath}`,
+            folderPath
+          ];
+          for (const cPath of candidatePaths) {
+            try {
+              const url = `https://api.github.com/repos/${repoSlug}/contents/${cPath}?ref=main`;
+              const res = await fetch(url, {
+                headers: { 'Accept': 'application/vnd.github.v3+json' },
+                cache: 'no-store'
+              });
+              if (res.ok) {
+                const items = await res.json();
+                if (Array.isArray(items)) {
+                  const mdFiles = items.filter(f => f.type === 'file' && /\.(md|markdown|txt)$/i.test(f.name));
+                  for (const fileItem of mdFiles.slice(0, 30)) {
+                    if (!seenNames.has(fileItem.name)) {
+                      // Fetch raw content with cache-buster
+                      const rawUrl = fileItem.download_url || `https://raw.githubusercontent.com/${repoSlug}/main/${fileItem.path}`;
+                      const rawRes = await fetch(`${rawUrl}${rawUrl.includes('?') ? '&' : '?'}t=${cacheBuster}`);
+                      if (rawRes.ok) {
+                        const rawText = await rawRes.text();
+                        const parsed = parseMarkdownWithFrontmatter(rawText, fileItem.name);
+                        seenNames.add(fileItem.name);
+                        loadedPosts.push({
+                          id: 'gh-md-' + fileItem.sha,
+                          title: parsed.title,
+                          date: parsed.date,
+                          tags: parsed.tags,
+                          source: `${repoSlug}/${fileItem.path}`,
+                          summary: parsed.summary,
+                          content: parsed.content
+                        });
+                      }
                     }
                   }
                 }
               }
-            }
-          } catch (e) {}
+            } catch (e) {}
+          }
         }
 
         if (loadedPosts.length > 0) {
@@ -1461,12 +1547,12 @@
           setPosts(loadedPosts);
           setRepoLogsStatus(`Synced ${loadedPosts.length} Markdown log(s) from Git.`);
         }
+        return loadedPosts.length;
       }
 
-      // 3. Fetch real GitHub activity & repositories for xarop-pa-toss
+      // 4. Fetch real GitHub activity & repositories for xarop-pa-toss
       async function fetchLiveGitActivity() {
         const user = (bio.githubUser || 'xarop-pa-toss').trim();
-        setGitSyncStatus('Syncing live GitHub data...');
         try {
           const [eventsRes, reposRes] = await Promise.all([
             fetch(`https://api.github.com/users/${encodeURIComponent(user)}/events/public?per_page=30`),
@@ -1501,7 +1587,6 @@
               }
               if (repoCommits.length > 0) {
                 setGithubCommits(repoCommits);
-                setGitSyncStatus(`Synced ${repoCommits.length} latest commit(s) from github.com/${user}.`);
               }
             }
           }
@@ -1529,12 +1614,9 @@
             }
             if (extractedCommits.length > 0) {
               setGithubCommits(extractedCommits.slice(0, 8));
-              setGitSyncStatus(`Synced ${extractedCommits.length} recent commit(s) from GitHub (@${user}).`);
             }
           }
-        } catch (err) {
-          setGitSyncStatus('Could not reach api.github.com from this network.');
-        }
+        } catch (err) {}
 
         if (bio.giteaBaseUrl && bio.giteaBaseUrl.trim()) {
           try {
@@ -1566,11 +1648,45 @@
         }
       }
 
-      useEffect(() => {
-        loadCanonicalStateJson().then(() => {
-          loadLogsFromGit();
-          fetchLiveGitActivity();
+      // Master GitOps Sync Pipeline
+      async function triggerGitOpsSync(isInitial = false) {
+        setGitOpsSync(prev => ({ ...prev, status: 'syncing' }));
+        setGitSyncStatus('Synchronizing live state and logs from GitHub...');
+
+        const repoSlug = (bio.logsRepo || 'xarop-pa-toss/layer-zero').trim();
+
+        // Run sync operations in parallel
+        const [syncSource, commitInfo, logCount] = await Promise.all([
+          loadCanonicalStateJson(repoSlug),
+          fetchLatestRepoCommit(repoSlug),
+          loadLogsFromGit(repoSlug, bio.logsPath || 'logs'),
+          fetchLiveGitActivity()
+        ]);
+
+        const now = new Date();
+        const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+        setGitOpsSync({
+          status: syncSource === 'github' ? 'synced' : 'fallback',
+          source: syncSource,
+          repo: repoSlug,
+          branch: 'main',
+          lastCommitSha: commitInfo ? commitInfo.sha : '',
+          lastCommitMsg: commitInfo ? commitInfo.message : '',
+          lastCommitDate: commitInfo ? commitInfo.date : '',
+          lastSyncedAt: timeStr,
+          logCount: logCount || 0
         });
+
+        if (syncSource === 'github') {
+          setGitSyncStatus(`GitOps live: synced from github.com/${repoSlug}@${commitInfo ? commitInfo.sha : 'main'} at ${timeStr}.`);
+        } else {
+          setGitSyncStatus(`Synced at ${timeStr} (using bundled repo state; head commit ${commitInfo ? commitInfo.sha : 'local'}).`);
+        }
+      }
+
+      useEffect(() => {
+        triggerGitOpsSync(true);
       }, []);
 
       const downloadPostAsMarkdown = (post) => {
@@ -1709,6 +1825,18 @@
               )
             ),
             h('div', { style: { display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.75rem' } },
+              h('div', { className: 'font-mono', style: { fontSize: '11.5px', color: '#2A7886', display: 'flex', alignItems: 'center', gap: '0.35rem' } },
+                h('span', {
+                  style: {
+                    display: 'inline-block',
+                    width: '7px',
+                    height: '7px',
+                    borderRadius: '50%',
+                    backgroundColor: gitOpsSync.status === 'syncing' ? '#FFA500' : (gitOpsSync.source === 'github' ? '#2A7886' : '#512B58')
+                  }
+                }),
+                gitOpsSync.lastCommitSha ? `xarop-pa-toss/layer-zero@${gitOpsSync.lastCommitSha}` : 'GitOps Connected'
+              ),
               h('input', {
                 type: 'search',
                 ariaLabel: 'Search The Logs',
@@ -1716,13 +1844,14 @@
                 value: searchQuery,
                 onChange: e => setSearchQuery(e.target.value),
                 className: 'os-input font-mono',
-                style: { width: '240px', padding: '0.45rem 0.75rem', fontSize: '12.5px' }
+                style: { width: '220px', padding: '0.45rem 0.75rem', fontSize: '12.5px' }
               }),
               h('button', {
                 type: 'button',
-                onClick: () => loadLogsFromGit(bio),
-                className: 'os-btn'
-              }, 'Refresh from Git')
+                onClick: () => triggerGitOpsSync(false),
+                className: 'os-btn os-btn-teal',
+                style: { display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }
+              }, gitOpsSync.status === 'syncing' ? 'Syncing...' : 'Sync with Git ↻')
             )
           ),
 
@@ -2433,6 +2562,84 @@
           )
         ),
 
+        // GitOps Engine & Terminal Workflow Architecture
+        h('section', { className: 'os-window' },
+          h('div', { className: 'os-titlebar' },
+            h('span', null, 'GitOps Engine & Terminal Workflow'),
+            h('span', null, `Repo: ${gitOpsSync.repo}@${gitOpsSync.branch}`)
+          ),
+          h('div', { style: { padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' } },
+            h('div', { style: { maxWidth: '75ch', display: 'flex', flexDirection: 'column', gap: '0.65rem' } },
+              h('h2', { className: 'font-display', style: { fontSize: '1.65rem', fontWeight: 700, color: '#512B58' } },
+                'How Automatic Updates Work (Zero-Maintenance GitOps)'
+              ),
+              h('p', { style: { fontSize: '0.96rem', color: '#231926', lineHeight: 1.6 } },
+                'Layer Zero is engineered with a client-side GitOps architecture. When you push commits to your public GitHub repository (',
+                h('strong', { style: { color: '#2A7886' } }, gitOpsSync.repo),
+                '), visitor browsers query the GitHub API and GitHub Raw CDN on every page load with cache-busting headers. There is no need for webhook servers, manual rebuilds, or container redeployments.'
+              )
+            ),
+
+            // Live Telemetry Grid
+            h('div', { className: 'grid-2', style: { gap: '1rem' } },
+              h('div', { className: 'os-panel', style: { padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.45rem' } },
+                h('div', { className: 'font-mono', style: { fontSize: '11px', color: '#4E5D63' } }, 'GITOPS TARGET REPOSITORY'),
+                h('div', { className: 'font-mono', style: { fontSize: '13px', fontWeight: 600, color: '#512B58' } },
+                  h('a', { href: `https://github.com/${gitOpsSync.repo}`, target: '_blank', rel: 'noreferrer' }, `${gitOpsSync.repo} ↗`)
+                ),
+                h('div', { style: { fontSize: '0.85rem', color: '#231926' } }, `Branch: ${gitOpsSync.branch} · Monitored folders: /public/state.json, /public/logs/`)
+              ),
+              h('div', { className: 'os-panel', style: { padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.45rem' } },
+                h('div', { className: 'font-mono', style: { fontSize: '11px', color: '#4E5D63' } }, 'LIVE SYNC TELEMETRY'),
+                h('div', { className: 'font-mono', style: { fontSize: '13px', fontWeight: 600, color: '#2A7886', display: 'flex', alignItems: 'center', gap: '0.5rem' } },
+                  h('span', { style: { width: '8px', height: '8px', borderRadius: '50%', backgroundColor: gitOpsSync.source === 'github' ? '#2A7886' : '#512B58', display: 'inline-block' } }),
+                  gitOpsSync.lastCommitSha ? `HEAD Commit: @${gitOpsSync.lastCommitSha}` : 'Status: Ready'
+                ),
+                h('div', { style: { fontSize: '0.85rem', color: '#231926' } },
+                  `Source: ${gitOpsSync.source === 'github' ? 'GitHub Raw API (Live)' : 'Local Bundled (Fallback)'} · Last sync: ${gitOpsSync.lastSyncedAt || 'On load'}`
+                )
+              )
+            ),
+
+            // 2-Column CLI Workflow Reference
+            h('div', { className: 'grid-2', style: { gap: '1rem' } },
+              h('div', { className: 'os-panel', style: { padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.65rem' } },
+                h('div', { className: 'font-mono', style: { fontSize: '12px', fontWeight: 600, color: '#512B58' } }, '01. Publishing a New Log Dispatch'),
+                h('p', { style: { fontSize: '0.88rem', color: '#231926' } },
+                  'Create a markdown file in ',
+                  h('code', { className: 'font-mono', style: { backgroundColor: '#E6ECEE', padding: '2px 4px', fontSize: '11.5px' } }, 'public/logs/YYYY-MM-DD-title.md'),
+                  ' with frontmatter, then commit and push:'
+                ),
+                h('pre', { className: 'font-mono', style: { backgroundColor: '#231926', color: '#79BAC1', padding: '0.75rem', fontSize: '11px', overflowX: 'auto', borderRadius: '2px', lineHeight: 1.5 } },
+                  `git add public/logs/\ngit commit -m "log: new dispatch"\ngit push origin main`
+                )
+              ),
+              h('div', { className: 'os-panel', style: { padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.65rem' } },
+                h('div', { className: 'font-mono', style: { fontSize: '12px', fontWeight: 600, color: '#2A7886' } }, '02. Updating Roadmap & Flaggo Progress'),
+                h('p', { style: { fontSize: '0.88rem', color: '#231926' } },
+                  'Edit task statuses in ',
+                  h('code', { className: 'font-mono', style: { backgroundColor: '#E6ECEE', padding: '2px 4px', fontSize: '11.5px' } }, 'public/state.json'),
+                  ' ("pending" -> "independent" / "ai_assisted"), then push:'
+                ),
+                h('pre', { className: 'font-mono', style: { backgroundColor: '#231926', color: '#79BAC1', padding: '0.75rem', fontSize: '11px', overflowX: 'auto', borderRadius: '2px', lineHeight: 1.5 } },
+                  `git add public/state.json\ngit commit -m "roadmap: milestone updated"\ngit push origin main`
+                )
+              )
+            ),
+
+            h('div', { style: { display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', paddingTop: '0.75rem', borderTop: '1px solid rgba(42, 120, 134, 0.28)' } },
+              h('div', { className: 'font-mono', style: { fontSize: '11.5px', color: '#4E5D63' } },
+                'Full instructions documented in repo root: GITOPS_GUIDE.md'
+              ),
+              h('button', {
+                type: 'button',
+                onClick: () => triggerGitOpsSync(false),
+                className: 'os-btn os-btn-teal'
+              }, gitOpsSync.status === 'syncing' ? 'Syncing...' : 'Force Sync Now ↻')
+            )
+          )
+        ),
+
         // Live GitHub Repositories Fetched from https://api.github.com/users/xarop-pa-toss/repos
         h('section', { className: 'os-window' },
           h('div', { className: 'os-titlebar os-titlebar-teal' },
@@ -2516,11 +2723,42 @@
             )
           ),
 
-          h('button', {
-            type: 'button',
-            onClick: () => setBioOpen(true),
-            className: 'os-btn os-btn-primary'
-          }, 'Bio — Ricardo Giro')
+          h('div', { style: { display: 'flex', alignItems: 'center', gap: '0.65rem', flexShrink: 0 } },
+            h('button', {
+              type: 'button',
+              onClick: () => triggerGitOpsSync(false),
+              title: `GitOps Sync: Pull newest state & logs from ${gitOpsSync.repo}@${gitOpsSync.branch}`,
+              className: 'os-btn',
+              style: {
+                fontSize: '11px',
+                padding: '0.4rem 0.65rem',
+                backgroundColor: gitOpsSync.status === 'syncing' ? '#E6ECEE' : (gitOpsSync.source === 'github' ? '#79BAC1' : '#F1F3F4'),
+                color: '#512B58',
+                borderColor: '#2A7886',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.4rem'
+              }
+            },
+              h('span', {
+                style: {
+                  display: 'inline-block',
+                  width: '7px',
+                  height: '7px',
+                  borderRadius: '50%',
+                  backgroundColor: gitOpsSync.status === 'syncing' ? '#FFA500' : (gitOpsSync.source === 'github' ? '#2A7886' : '#512B58')
+                }
+              }),
+              gitOpsSync.status === 'syncing'
+                ? 'SYNCING...'
+                : (gitOpsSync.lastCommitSha ? `GITOPS: @${gitOpsSync.lastCommitSha} ↻` : 'GITOPS SYNC ↻')
+            ),
+            h('button', {
+              type: 'button',
+              onClick: () => setBioOpen(true),
+              className: 'os-btn os-btn-primary'
+            }, 'Bio — Ricardo Giro')
+          )
         ),
 
         // --- MAIN WORKSPACE ---
@@ -2641,23 +2879,53 @@
               )
             )
           ),
-          h('a', {
-            href: bio.githubUrl,
-            target: '_blank',
-            rel: 'noreferrer',
-            style: {
-              height: '100%',
-              padding: '0 0.7rem',
-              fontSize: '0.66rem',
-              backgroundColor: '#79BAC1',
-              color: '#512B58',
-              fontWeight: 600,
-              borderLeft: '1.5px solid #512B58',
-              display: 'inline-flex',
-              alignItems: 'center',
-              whiteSpace: 'nowrap'
-            }
-          }, '@xarop-pa-toss ↗')
+          h('div', { style: { display: 'flex', height: '100%', flexShrink: 0 } },
+            h('button', {
+              type: 'button',
+              onClick: () => triggerGitOpsSync(false),
+              style: {
+                height: '100%',
+                padding: '0 0.65rem',
+                fontSize: '0.66rem',
+                backgroundColor: '#2A7886',
+                color: '#FFFFFF',
+                borderLeft: '1.5px solid #512B58',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.35rem',
+                cursor: 'pointer'
+              },
+              title: `Click to pull newest commits and state from github.com/${gitOpsSync.repo}`
+            },
+              h('span', {
+                style: {
+                  display: 'inline-block',
+                  width: '6px',
+                  height: '6px',
+                  borderRadius: '50%',
+                  backgroundColor: gitOpsSync.status === 'syncing' ? '#FFA500' : '#79BAC1'
+                }
+              }),
+              gitOpsSync.lastCommitSha ? `GITOPS: @${gitOpsSync.lastCommitSha}` : 'GITOPS: LIVE'
+            ),
+            h('a', {
+              href: bio.githubUrl,
+              target: '_blank',
+              rel: 'noreferrer',
+              style: {
+                height: '100%',
+                padding: '0 0.7rem',
+                fontSize: '0.66rem',
+                backgroundColor: '#79BAC1',
+                color: '#512B58',
+                fontWeight: 600,
+                borderLeft: '1.5px solid #512B58',
+                display: 'inline-flex',
+                alignItems: 'center',
+                whiteSpace: 'nowrap'
+              }
+            }, '@xarop-pa-toss ↗')
+          )
         )
       );
     }
