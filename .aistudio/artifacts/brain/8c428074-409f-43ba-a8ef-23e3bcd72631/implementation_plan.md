@@ -1,60 +1,80 @@
-# Implementation Plan - Real-Time GitOps Auto-Update for Layer Zero
+# Dual-Host GitOps Architecture: GitHub Pages (`xarop.link`) + AI Studio (`layer-zero.ai.studio`)
 
-## Overview
-Because Layer Zero is hosted in AI Studio / Cloud Run, traditional server redeployment on git push would require complex CI/CD webhook infrastructure. Instead, we implement a **Client-Side GitOps Sync Engine**: the website runs in the visitor's browser and fetches your canonical data directly from your public GitHub repository (`xarop-pa-toss/layer-zero`) on every page load and refresh with cache-busting headers. 
-
-The moment you run `git push origin main`, anyone visiting or refreshing the website receives the latest `state.json`, new log posts (`logs/*.md`), and live commit status instantly—true GitOps with zero server maintenance.
+Maintain seamless **two-way compatibility** between **GitHub Pages (`https://xarop.link`)** and **AI Studio (`layer-zero.ai.studio`)**, so you can update your site from **either** AI Studio or your local terminal (`git push origin main`) and have both environments stay synchronized.
 
 ---
 
-## Proposed Changes
+## User Review & Critical Decisions
 
-### 1. Dynamic GitHub GitOps Loader for `state.json`
-- **Location**: `/index.html` (`loadCanonicalStateJson`)
-- **Behavior**:
-  - Primary source: fetch `https://raw.githubusercontent.com/xarop-pa-toss/layer-zero/main/public/state.json?t=<timestamp>` (or `main/state.json`) with `cache: 'no-store'`.
-  - Seamless Fallback: if GitHub is down, rate-limited, or offline, smoothly fallback to the bundled local `./state.json`.
-  - Result: Any roadmap progress, bio edits, or project status committed to GitHub is reflected immediately on the live site.
+> [!IMPORTANT]
+> **How Dual Hosting Works Without Conflicts:**
+> Your GitHub repository (`xarop-pa-toss/devblog-layer-zero` on `main`) serves as the single canonical bridge between AI Studio and GitHub Pages. You never lose the ability to edit in AI Studio: changes made here and pushed to GitHub automatically deploy to `xarop.link`, and changes pushed from your local terminal automatically load on both `xarop.link` and `layer-zero.ai.studio`.
 
-### 2. Enhanced Markdown Logs Git Synchronization
-- **Location**: `/index.html` (`loadLogsFromGit`)
-- **Behavior**:
-  - Fetch log directory listing from the GitHub Contents API (`/repos/xarop-pa-toss/layer-zero/contents/public/logs` and `/repos/xarop-pa-toss/layer-zero/contents/logs`).
-  - Download and parse all `.md` files dynamically.
-  - Automatically sort dispatches by date/id and tag badges.
-  - Fallback to bundled local logs (`./logs/index.json`) if GitHub API is unreachable.
-
-### 3. GitOps Telemetry & Commit Head Indicator
-- **Location**: `/index.html` (Top Navbar and System Status Footer)
-- **Behavior**:
-  - Query `https://api.github.com/repos/xarop-pa-toss/layer-zero/commits/main` on load to fetch the latest commit SHA (e.g. `c4b18f0`) and commit timestamp.
-  - Display a subtle GitOps indicator in the bottom status bar: `GITOPS: xarop-pa-toss/layer-zero@<sha7> [SYNCED]`.
-  - Include an instant **Sync** button in the OS top bar / Logs window to refetch raw GitHub state on demand without reloading the tab.
-
-### 4. GitOps Setup & Workflow Reference
-- **Location**: `/GITOPS_GUIDE.md` (and a quick in-app modal in "Other Stuff" or Help)
-- **Content**:
-  - Clear, step-by-step instructions on directory structure:
-    - `public/state.json` (canonical profile, roadmap, and project metadata)
-    - `public/logs/YYYY-MM-DD-title.md` (new log articles)
-  - The standard 3-step terminal flow:
-    ```bash
-    git add .
-    git commit -m "log: updated flaggo rollout status"
-    git push origin main
-    ```
-  - Verification tips for GitHub raw caching and public repo visibility.
+- **Confirmed Decision — Dual Support (`Keep dual support for GitHub Pages and AI Studio`)**:
+  1. **Update from AI Studio**: Build or tweak features here in AI Studio -> push/sync to GitHub -> GitHub Actions deploys the static build to `https://xarop.link` while AI Studio serves `layer-zero.ai.studio`.
+  2. **Update from Local Git CLI**: Edit Markdown logs, `state.json`, or `index.html` locally -> `git push origin main` -> GitHub Actions rebuilds `https://xarop.link` AND the live GitHub API loader updates `layer-zero.ai.studio` immediately.
 
 ---
 
-## Verification Plan
+## 1. Overview & Core Concept
 
-### Automated Build & Syntax Verification
-- Run `compile_applet` to ensure `/index.html` compiles cleanly.
-- Verify that both local static files and remote GitHub fetch pipelines have error-boundary handling so the site never breaks if GitHub rate-limits or the user is offline.
+- **What It Does**: Unifies static GitHub Pages deployment (custom domain `xarop.link` with automated HTTPS and Markdown indexing) with AI Studio's live GitHub Contents API loader and bootloader.
+- **Target Audience / Persona**: Ricardo Giro (`xarop-pa-toss`) switching fluidly between local terminal Git commits for day-to-day logs/roadmap updates and AI Studio for visual or architectural iterations.
+- **Key Value**: Best of both worlds—native custom domain hosting on `https://xarop.link` plus full interactive AI Studio editing whenever you want it.
 
-### Manual Functional Verification
-1. **Default Local Loading**: Verify Layer Zero loads perfectly from bundled files immediately.
-2. **Live Fetching Simulation**: Test fetching `state.json` and logs from GitHub with fallback resilience.
-3. **Sync Action**: Click the "Sync" button in the UI and confirm the commit SHA updates and data refreshes without page reload.
-4. **Visual Style**: Ensure the retro 90s workstation palette (`#F1F3F4`, `#79BAC1`, `#2A7886`, `#512B58`) remains cohesive and clean.
+---
+
+## 2. User Experience & Visual Design
+
+- **Key User Flows**:
+  1. **AI Studio -> GitHub -> Live Sites**: You prompt changes in AI Studio, preview them live, and sync to GitHub. The GitHub Actions workflow builds and publishes to `xarop.link` automatically.
+  2. **Local Terminal -> GitHub -> Live Sites**: You commit a new `.md` post or `state.json` change locally and run `git push origin main`. Both `xarop.link` and `layer-zero.ai.studio` reflect the commit immediately.
+  3. **Live Host & Sync Telemetry**: In **Other Stuff -> GitOps Engine & Terminal Workflow**, the telemetry panel displays which host is currently serving the page (`GitHub Pages · xarop.link`, `AI Studio · layer-zero.ai.studio`, or `Local Workstation`), the active commit SHA (`@sha`), and side-by-side guides for both workflows.
+- **Visual Identity & Theme**:
+  - Preserves the Restrained 90s Workstation Light Mode palette (`#F1F3F4` canvas, `#FFFFFF` window surfaces, `#2A7886` deep teal, `#512B58` royal plum, `Chakra Petch` + `IBM Plex Sans` + `IBM Plex Mono`).
+
+---
+
+## 3. Key Product Decisions & Trade-Offs
+
+- **Decision 1: Instant Bundled Render + Live GitHub API Overlay on All Hosts**
+  - *Chosen Approach*: Load the local/same-origin static files (`./state.json`, `./logs/*.md`, `./keebs/*.md`) immediately for zero-latency first paint and rate-limit resilience, while simultaneously querying the GitHub Contents API (`cache: 'no-store'`) so even a brand-new commit pushed 1 second ago overrides stale cache on both `xarop.link` and `layer-zero.ai.studio`.
+  - *Why*: Guarantees instant page load on `xarop.link` even if GitHub's API rate limit is reached, while ensuring zero propagation delay right after a `git push`.
+
+- **Decision 2: Automated Content Indexing at Build Time**
+  - *Chosen Approach*: Automatically generate `logs/index.json` and `keebs/index.json` during the build step before bundling static assets.
+  - *Why*: Allows you to add new `.md` files from either AI Studio or your terminal without manually editing `index.json`.
+
+---
+
+## 4. Technical Architecture & Data Strategy *(Technical Reference)*
+
+### Architecture & Dual-Host Sync Diagram
+
+```
+   ┌──────────────────────────────┐         ┌──────────────────────────────┐
+   │   Workflow A: Local CLI      │         │   Workflow B: AI Studio      │
+   │   (Neovim / Terminal Git)    │         │   (Interactive Build & Sync) │
+   └──────────────┬───────────────┘         └──────────────┬───────────────┘
+                  │ git push origin main                   │ Push / Sync to GitHub
+                  ▼                                        ▼
+   ┌───────────────────────────────────────────────────────────────────────┐
+   │              GitHub Repository (Single Source of Truth)               │
+   │                xarop-pa-toss/devblog-layer-zero (main)                │
+   └──────────────────┬─────────────────────────────────┬──────────────────┘
+                      │                                 │
+                      ▼ (GitHub Actions Build)          ▼ (Live Contents API + Bootloader)
+   ┌──────────────────────────────────────┐  ┌──────────────────────────────────────┐
+   │   Host 1: GitHub Pages (xarop.link)  │  │  Host 2: AI Studio (layer-zero...)   │
+   │  • Native Custom Domain + Free HTTPS │  │  • Live Bootloader for index.html    │
+   │  • Same-Origin Fast Asset Delivery   │  │  • Live GitHub API State & MD Sync   │
+   │  • Live GitHub API Instant Overlay   │  │  • Interactive AI Studio Editing     │
+   └──────────────────────────────────────┘  └──────────────────────────────────────┘
+```
+
+### Interactive Component & State Mapping
+
+- **Host Environment Detection (`detectHostEnvironment`)**:
+  - Classifies `window.location.hostname` into `'github-pages'` (`xarop.link` / `*.github.io`), `'ai-studio'` (`*.ai.studio` / `*.run.app`), or `'local'` (`localhost` / `127.0.0.1`) and surfaces this status in the GitOps telemetry panel.
+- **Unified Content Hydration**:
+  - Hydrates `state.json`, `logs/*.md`, and `keebs/*.md` from same-origin static files for instant startup, then applies fresh GitHub Contents API payloads (`xarop-pa-toss/devblog-layer-zero@main`) when online so both hosts always display the latest commit.

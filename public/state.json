@@ -5,7 +5,7 @@
     "handle": "xarop_pa_toss",
     "githubUser": "xarop-pa-toss",
     "githubUrl": "https://github.com/xarop-pa-toss",
-    "logsRepo": "xarop-pa-toss/layer-zero",
+    "logsRepo": "xarop-pa-toss/devblog-layer-zero",
     "logsPath": "logs",
     "giteaBaseUrl": "",
     "giteaUser": "xarop_pa_toss",
@@ -13,6 +13,57 @@
     "summary": "Systems and infrastructure engineer & dotnet dev transitioning operational administration experience into reproducible Linux, cloud networking, Terraform IaC, Docker containerization, and automated CI/CD pipelines.",
     "pitch": "Building Flaggo — a lightweight, self-hosted 4-app Feature Flag & Runtime Configuration Platform decoupling code deployment from feature release.",
     "stack": "C# / .NET · Linux (Systemd / Journalctl) · Terraform · AWS & Azure · Docker Compose · PostgreSQL · GitHub Actions & Self-Hosted Gitea · Bash & PowerShell"
+  },
+  "ui": {
+    "brandTitle": "Layer Zero",
+    "hero": {
+      "windowTitle": "Layer Zero — Ricardo Giro",
+      "headline": "Ricardo Giro — Infrastructure, DevOps & Engineering Hub",
+      "activeProjectLabel": "Active Roadmap Project:",
+      "activeProjectName": "Flaggo",
+      "activeProjectText": "— a lightweight, self-hosted 4-app Feature Flag & Runtime Configuration Platform decoupling code deployment from feature release.",
+      "buttons": [
+        {
+          "id": "btn-flaggo",
+          "label": "Operation Flaggo ({opPassedGates}/{opTotalGates} Gates)",
+          "actionType": "section",
+          "target": "operation",
+          "variant": "primary",
+          "enabled": true
+        },
+        {
+          "id": "btn-roadmap",
+          "label": "DevOps Roadmap ({completionPercent}%)",
+          "actionType": "section",
+          "target": "roadmap",
+          "variant": "teal",
+          "enabled": true
+        },
+        {
+          "id": "btn-projects",
+          "label": "Other Stuff",
+          "actionType": "section",
+          "target": "projects",
+          "variant": "default",
+          "enabled": true
+        },
+        {
+          "id": "btn-github",
+          "label": "GitHub ->",
+          "actionType": "external",
+          "target": "https://github.com/xarop-pa-toss",
+          "variant": "default",
+          "enabled": true
+        }
+      ]
+    },
+    "navItems": [
+      { "id": "logs", "label": "The Logs", "enabled": true },
+      { "id": "roadmap", "label": "DevOps Roadmap", "enabled": true },
+      { "id": "operation", "label": "Operation Flaggo", "enabled": true },
+      { "id": "keebs", "label": "Keebs", "enabled": true },
+      { "id": "projects", "label": "Other Stuff", "enabled": true }
+    ]
   },
   "opTasks": {
     "fm1_1": "pending",

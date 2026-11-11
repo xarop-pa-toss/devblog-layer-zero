@@ -389,12 +389,317 @@
     };
 
     // --- RICARDO GIRO (xarop_pa_toss) PROFILE ---
+    const DEFAULT_REPO_SLUG = 'xarop-pa-toss/devblog-layer-zero';
+
+    function normalizeRepoSlug(slug) {
+      const trimmed = String(slug || '').trim();
+      if (!trimmed || trimmed === 'xarop-pa-toss/layer-zero') {
+        return DEFAULT_REPO_SLUG;
+      }
+      return trimmed;
+    }
+
+    function isGitHubPagesHost(hostname) {
+      const host = String(hostname || (typeof window !== 'undefined' && window.location ? window.location.hostname : '') || '').trim().toLowerCase();
+      if (!host) return false;
+      return host === 'xarop.link' || host.endsWith('.xarop.link') || host.endsWith('.github.io');
+    }
+
+    function detectHostEnvironment(hostname) {
+      const host = String(hostname || (typeof window !== 'undefined' && window.location ? window.location.hostname : '') || '').trim().toLowerCase();
+      if (isGitHubPagesHost(host)) {
+        return { id: 'github-pages', label: 'GitHub Pages (xarop.link)' };
+      }
+      if (host.endsWith('.ai.studio') || host.endsWith('.run.app')) {
+        return { id: 'ai-studio', label: 'AI Studio (layer-zero.ai.studio)' };
+      }
+      return { id: 'local', label: 'Local Workstation' };
+    }
+
+    function decodeGitHubBase64(b64) {
+      try {
+        const clean = String(b64 || '').replace(/\s+/g, '');
+        const binStr = atob(clean);
+        const bytes = new Uint8Array(binStr.length);
+        for (let i = 0; i < binStr.length; i++) {
+          bytes[i] = binStr.charCodeAt(i);
+        }
+        return new TextDecoder('utf-8').decode(bytes);
+      } catch (e) {
+        return '';
+      }
+    }
+
+    async function fetchGitHubFileText(repoSlug, filePath, branch = 'main', fileSha = '') {
+      const cleanRepo = normalizeRepoSlug(repoSlug);
+      const cleanPath = String(filePath || '').replace(/^\/+/, '');
+      const cb = Date.now();
+
+      // 1. Primary: GitHub Contents API (returns live base64 content immediately after git push, bypassing Fastly raw CDN cache)
+      try {
+        const apiUrl = `https://api.github.com/repos/${cleanRepo}/contents/${cleanPath}?ref=${encodeURIComponent(branch)}&_t=${cb}`;
+        const apiRes = await fetch(apiUrl, {
+          headers: { 'Accept': 'application/vnd.github.v3+json' },
+          cache: 'no-store'
+        });
+        if (apiRes.ok) {
+          const item = await apiRes.json();
+          if (item && item.content && item.encoding === 'base64') {
+            const decoded = decodeGitHubBase64(item.content);
+            if (decoded) return decoded;
+          }
+        }
+      } catch (e) {}
+
+      // 2. Secondary: Git Blob API by SHA if provided (content-addressable & never stale)
+      if (fileSha) {
+        try {
+          const blobRes = await fetch(`https://api.github.com/repos/${cleanRepo}/git/blobs/${fileSha}`, {
+            headers: { 'Accept': 'application/vnd.github.v3+json' },
+            cache: 'no-store'
+          });
+          if (blobRes.ok) {
+            const blobData = await blobRes.json();
+            if (blobData && blobData.content && blobData.encoding === 'base64') {
+              const decoded = decodeGitHubBase64(blobData.content);
+              if (decoded) return decoded;
+            }
+          }
+        } catch (e) {}
+      }
+
+      // 3. Fallback: GitHub Raw CDN
+      try {
+        const rawRes = await fetch(`https://raw.githubusercontent.com/${cleanRepo}/${branch}/${cleanPath}?t=${cb}`, {
+          cache: 'no-store'
+        });
+        if (rawRes.ok) {
+          return await rawRes.text();
+        }
+      } catch (e) {}
+
+      return null;
+    }
+
+    const BASELINE_GITHUB_INDEX_SHA = 'c1d70da4bb32cd879a59b349cdd738f936e8e32c';
+
+    const DEFAULT_UI_CONFIG = {
+      brandTitle: 'Layer Zero',
+      hero: {
+        windowTitle: 'Layer Zero — Ricardo Giro',
+        headline: 'Ricardo Giro — Infrastructure, DevOps & Engineering Hub',
+        activeProjectLabel: 'Active Roadmap Project:',
+        activeProjectName: 'Flaggo',
+        activeProjectText: '— a lightweight, self-hosted 4-app Feature Flag & Runtime Configuration Platform decoupling code deployment from feature release.',
+        buttons: [
+          {
+            id: 'btn-flaggo',
+            label: 'Operation Flaggo ({opPassedGates}/{opTotalGates} Gates)',
+            actionType: 'section',
+            target: 'operation',
+            variant: 'primary',
+            enabled: true
+          },
+          {
+            id: 'btn-roadmap',
+            label: 'DevOps Roadmap ({completionPercent}%)',
+            actionType: 'section',
+            target: 'roadmap',
+            variant: 'teal',
+            enabled: true
+          },
+          {
+            id: 'btn-projects',
+            label: 'Other Stuff',
+            actionType: 'section',
+            target: 'projects',
+            variant: 'default',
+            enabled: true
+          },
+          {
+            id: 'btn-github',
+            label: 'GitHub ->',
+            actionType: 'external',
+            target: 'https://github.com/xarop-pa-toss',
+            variant: 'default',
+            enabled: true
+          }
+        ]
+      },
+      navItems: [
+        { id: 'logs', label: 'The Logs', enabled: true },
+        { id: 'roadmap', label: 'DevOps Roadmap', enabled: true },
+        { id: 'operation', label: 'Operation Flaggo', enabled: true },
+        { id: 'keebs', label: 'Keebs', enabled: true },
+        { id: 'projects', label: 'Other Stuff', enabled: true }
+      ]
+    };
+
+    function extractHtmlBootPayload(rawHtml) {
+      const html = String(rawHtml || '');
+      const styles = [];
+      const styleRegex = /<style\b[^>]*>([\s\S]*?)<\/style>/gi;
+      let styleMatch;
+      while ((styleMatch = styleRegex.exec(html)) !== null) {
+        if (styleMatch[1] && styleMatch[1].trim()) {
+          styles.push(styleMatch[1]);
+        }
+      }
+
+      let appScript = '';
+      const scriptRegex = /<script\b([^>]*)>([\s\S]*?)<\/script>/gi;
+      let scriptMatch;
+      while ((scriptMatch = scriptRegex.exec(html)) !== null) {
+        const attrs = scriptMatch[1] || '';
+        const body = scriptMatch[2] || '';
+        if (/\bsrc\s*=/i.test(attrs)) continue;
+        if (body.trim().length > appScript.length) {
+          appScript = body.replace(/xarop-pa-toss\/layer-zero/g, DEFAULT_REPO_SLUG);
+        }
+      }
+
+      return { styles, appScript };
+    }
+
+    function shouldExecuteRemoteIndex(remoteSha, baselineSha = BASELINE_GITHUB_INDEX_SHA, forceRemote = false) {
+      const cleanRemote = String(remoteSha || '').trim();
+      if (!cleanRemote) return false;
+      if (forceRemote) return true;
+      return cleanRemote !== baselineSha;
+    }
+
+    function resolveUiConfig(partialUi, defaults = DEFAULT_UI_CONFIG) {
+      if (!partialUi || typeof partialUi !== 'object') {
+        return {
+          ...defaults,
+          hero: {
+            ...defaults.hero,
+            buttons: defaults.hero.buttons.filter(b => b && b.enabled !== false)
+          },
+          navItems: defaults.navItems.filter(n => n && n.enabled !== false)
+        };
+      }
+
+      const rawHero = (partialUi.hero && typeof partialUi.hero === 'object') ? partialUi.hero : {};
+      const rawButtons = Array.isArray(rawHero.buttons) ? rawHero.buttons : defaults.hero.buttons;
+      const rawNavItems = Array.isArray(partialUi.navItems) ? partialUi.navItems : defaults.navItems;
+
+      return {
+        brandTitle: (typeof partialUi.brandTitle === 'string' && partialUi.brandTitle.trim())
+          ? partialUi.brandTitle
+          : defaults.brandTitle,
+        hero: {
+          windowTitle: (typeof rawHero.windowTitle === 'string' && rawHero.windowTitle.trim())
+            ? rawHero.windowTitle
+            : defaults.hero.windowTitle,
+          headline: (typeof rawHero.headline === 'string' && rawHero.headline.trim())
+            ? localHeadline(rawHero.headline)
+            : defaults.hero.headline,
+          activeProjectLabel: typeof rawHero.activeProjectLabel === 'string'
+            ? rawHero.activeProjectLabel
+            : defaults.hero.activeProjectLabel,
+          activeProjectName: typeof rawHero.activeProjectName === 'string'
+            ? rawHero.activeProjectName
+            : defaults.hero.activeProjectName,
+          activeProjectText: typeof rawHero.activeProjectText === 'string'
+            ? rawHero.activeProjectText
+            : defaults.hero.activeProjectText,
+          buttons: rawButtons.filter(b => b && b.enabled !== false)
+        },
+        navItems: rawNavItems.filter(n => n && n.enabled !== false)
+      };
+    }
+
+    function localHeadline(val) {
+      return String(val || '').trim();
+    }
+
+    function interpolateButtonLabel(template, stats) {
+      return String(template || '')
+        .replace(/\{opPassedGates\}/g, String((stats && stats.opPassedGates) ?? 0))
+        .replace(/\{opTotalGates\}/g, String((stats && stats.opTotalGates) ?? 0))
+        .replace(/\{completionPercent\}/g, String((stats && stats.completionPercent) ?? 0));
+    }
+
+    function applyRemoteBootPayload(payload, sha) {
+      if (!payload || !payload.appScript) return false;
+      try {
+        if (Array.isArray(payload.styles) && payload.styles.length > 0) {
+          const styleEl = document.querySelector('head style') || document.createElement('style');
+          styleEl.textContent = payload.styles.join('\n');
+          if (!styleEl.parentNode) {
+            document.head.appendChild(styleEl);
+          }
+        }
+        window.__LZ_REMOTE_ACTIVE__ = true;
+        window.__LZ_BOOT_MODE__ = 'github-live';
+        window.__LZ_INDEX_BLOB_SHA__ = String(sha || '').slice(0, 7);
+        const runner = new Function(payload.appScript);
+        runner();
+        return true;
+      } catch (err) {
+        window.__LZ_REMOTE_ACTIVE__ = false;
+        return false;
+      }
+    }
+
+    async function bootFromGitHubIndexHtml(repoSlug = DEFAULT_REPO_SLUG, branch = 'main', forceOverride = false) {
+      const cleanRepo = normalizeRepoSlug(repoSlug);
+      const forceRemote = Boolean(forceOverride) || (typeof window !== 'undefined' && window.location && window.location.search.includes('force_remote_boot=1'));
+      if (isGitHubPagesHost() && !forceRemote) {
+        window.__LZ_BOOT_MODE__ = 'github-pages-native';
+        return false;
+      }
+      try {
+        const apiUrl = `https://api.github.com/repos/${cleanRepo}/contents/index.html?ref=${encodeURIComponent(branch)}&_t=${Date.now()}`;
+        const res = await fetch(apiUrl, {
+          headers: { 'Accept': 'application/vnd.github.v3+json' },
+          cache: 'no-store'
+        });
+        if (res.ok) {
+          const item = await res.json();
+          const remoteSha = (item && item.sha) ? String(item.sha) : '';
+          window.__LZ_INDEX_BLOB_SHA__ = remoteSha.slice(0, 7);
+
+          if (shouldExecuteRemoteIndex(remoteSha, BASELINE_GITHUB_INDEX_SHA, forceRemote)) {
+            let rawHtml = '';
+            if (item && item.content && item.encoding === 'base64') {
+              rawHtml = decodeGitHubBase64(item.content);
+            }
+            if (!rawHtml && remoteSha) {
+              rawHtml = await fetchGitHubFileText(cleanRepo, 'index.html', branch, remoteSha) || '';
+            }
+            if (rawHtml) {
+              const payload = extractHtmlBootPayload(rawHtml);
+              if (payload.appScript) {
+                safeSet('lz_cached_remote_index_v1', { sha: remoteSha, styles: payload.styles, appScript: payload.appScript });
+                if (applyRemoteBootPayload(payload, remoteSha)) {
+                  return true;
+                }
+              }
+            }
+          } else {
+            window.__LZ_BOOT_MODE__ = 'github-verified';
+          }
+        } else {
+          // Offline or rate-limited fallback: check if we cached a newer remote index.html previously
+          const cached = safeGet('lz_cached_remote_index_v1', null);
+          if (cached && cached.sha && shouldExecuteRemoteIndex(cached.sha, BASELINE_GITHUB_INDEX_SHA, forceRemote)) {
+            if (applyRemoteBootPayload(cached, cached.sha)) {
+              return true;
+            }
+          }
+        }
+      } catch (e) {}
+      return false;
+    }
+
     const DEFAULT_BIO = {
       name: 'Ricardo Giro',
       handle: 'xarop_pa_toss',
       githubUser: 'xarop-pa-toss',
       githubUrl: 'https://github.com/xarop-pa-toss',
-      logsRepo: 'xarop-pa-toss/layer-zero',
+      logsRepo: DEFAULT_REPO_SLUG,
       logsPath: 'logs',
       giteaBaseUrl: '',
       giteaUser: 'xarop_pa_toss',
@@ -1475,9 +1780,70 @@
             heading: '4. Portable Workstation Ergonomics & Tenting',
             text: 'Tenting the split halves by 10 to 15 degrees eliminates forearm pronation entirely. The Lotus58 chassis incorporates threaded M2 brass standoffs that accept aluminum cone feet, giving rock-solid table stability while retaining a compact footprint that packs neatly into a laptop sleeve.'
           }
-        ]
+        ],
+        content: `## 1. The Evolution from Lily58 to Lotus58\n\nWhile the Lily58 has a relatively horizontal thumb row, the Lotus58 rotates the 4-key thumb cluster by 12 degrees to mirror the natural radial arc of the human thumb. This eliminates hyperextension when hitting layer shift or enter keys. Additionally, dedicated acrylic guard plates mount over the fragile 0.91" OLED screens to protect glass displays during travel.\n\n## 2. Dual Rotary Encoders in Day-to-Day Engineering\n\nThe left knurled aluminum encoder controls system audio volume with smooth detents, and clicking the integrated switch instantly toggles microphone mute. The right encoder is mapped in Vial to dynamic terminal acceleration: a slow turn moves lines up and down in \`git log --oneline\` or \`journalctl\`, while a fast turn jumps full pages. In VS Code or Neovim, pushing the encoder toggles split window focus.\n\n## 3. Acoustic Rigidity with FR4 Plates & Boba U4T Switches\n\nRather than standard laser-cut acrylic plates which can flex and produce higher-pitched clack, the Lotus58 uses custom matte black FR4 composite plates with copper ground planes. Paired with Boba U4T tactile switches (62g springs) lubricated with Tribosys 3203, each keystroke provides a deep, satisfying tactile bump without generating excessive noise in shared spaces.\n\n## 4. Portable Workstation Ergonomics & Tenting\n\nTenting the split halves by 10 to 15 degrees eliminates forearm pronation entirely. The Lotus58 chassis incorporates threaded M2 brass standoffs that accept aluminum cone feet, giving rock-solid table stability while retaining a compact footprint that packs neatly into a laptop sleeve.`
       }
     ];
+
+    function parseKeebMarkdown(rawText, fallbackName) {
+      const baseSlug = String(fallbackName || 'keeb').replace(/\.(md|markdown|txt)$/i, '').toLowerCase();
+      const defaultRef = KEEB_ARTICLES.find(a => a.id === baseSlug) || KEEB_ARTICLES[0];
+      const trimmed = String(rawText || '').replace(/\r\n/g, '\n').trim();
+      const article = {
+        id: baseSlug,
+        name: defaultRef ? defaultRef.name : baseSlug.toUpperCase(),
+        title: defaultRef ? defaultRef.title : baseSlug,
+        subtitle: defaultRef ? defaultRef.subtitle : '',
+        date: defaultRef ? defaultRef.date : new Date().toISOString().split('T')[0],
+        readTime: defaultRef ? defaultRef.readTime : '6 min read',
+        tags: defaultRef ? [...defaultRef.tags] : ['split-keeb'],
+        diagram: baseSlug.includes('lily') ? 'lily58' : 'lotus58',
+        specs: defaultRef ? [...defaultRef.specs] : [],
+        overview: defaultRef ? defaultRef.overview : '',
+        sections: defaultRef ? [...defaultRef.sections] : [],
+        content: trimmed
+      };
+
+      if (trimmed.startsWith('---')) {
+        const endMatch = trimmed.slice(3).match(/\n---\s*(\n|$)/);
+        if (endMatch) {
+          const endIdx = 3 + endMatch.index;
+          const fmBlock = trimmed.slice(3, endIdx).trim();
+          const body = trimmed.slice(endIdx + endMatch[0].length).trim();
+          article.content = body;
+          fmBlock.split('\n').forEach(line => {
+            const colon = line.indexOf(':');
+            if (colon > 0) {
+              const key = line.slice(0, colon).trim().toLowerCase();
+              const val = line.slice(colon + 1).trim().replace(/^["']|["']$/g, '');
+              if (key === 'id' && val) article.id = val.toLowerCase();
+              if (key === 'name' && val) article.name = val;
+              if (key === 'title' && val) article.title = val;
+              if (key === 'subtitle' && val) article.subtitle = val;
+              if (key === 'date' && val) article.date = val;
+              if ((key === 'readtime' || key === 'read_time') && val) article.readTime = val;
+              if (key === 'diagram' && val) article.diagram = val.toLowerCase();
+              if (key === 'overview' && val) article.overview = val;
+              if (key === 'tags' && val) {
+                const cleaned = val.replace(/^\[|\]$/g, '');
+                article.tags = cleaned.split(',').map(t => t.trim().toLowerCase()).filter(Boolean);
+              }
+              if (key === 'specs' && val) {
+                const parsedSpecs = val.split('|').map(pair => {
+                  const eq = pair.indexOf('=');
+                  if (eq > 0) {
+                    return { label: pair.slice(0, eq).trim(), val: pair.slice(eq + 1).trim() };
+                  }
+                  return null;
+                }).filter(Boolean);
+                if (parsedSpecs.length > 0) article.specs = parsedSpecs;
+              }
+            }
+          });
+        }
+      }
+      return article;
+    }
 
     // --- UI COMPONENTS ---
     function StatusBadge({ status }) {
@@ -1666,6 +2032,9 @@
         COHORTS.forEach(c => { defaults[c.id] = { applied: 0, screens: 0, tech: 0 }; });
         return defaults;
       });
+      const [uiConfig, setUiConfig] = useState(() => resolveUiConfig(null));
+      const [roadmapData, setRoadmapData] = useState(ROADMAP_DATA);
+      const [flaggoMilestones, setFlaggoMilestones] = useState(FLAGGO_MILESTONES);
 
       // Live GitHub & Gitea Data
       const [githubCommits, setGithubCommits] = useState([]);
@@ -1678,13 +2047,15 @@
       const [gitOpsSync, setGitOpsSync] = useState({
         status: 'idle', // 'idle' | 'syncing' | 'synced' | 'fallback'
         source: 'local', // 'github' | 'local'
-        repo: 'xarop-pa-toss/layer-zero',
+        repo: DEFAULT_REPO_SLUG,
         branch: 'main',
         lastCommitSha: '',
         lastCommitMsg: '',
         lastCommitDate: '',
         lastSyncedAt: '',
-        logCount: 0
+        logCount: 0,
+        bootMode: (typeof window !== 'undefined' && window.__LZ_BOOT_MODE__) || 'github-verified',
+        indexBlobSha: (typeof window !== 'undefined' && window.__LZ_INDEX_BLOB_SHA__) || ''
       });
 
       // Read-Only Logs Filter & Reader State
@@ -1693,13 +2064,29 @@
       const [readingPost, setReadingPost] = useState(null);
 
       // Keebs State (Hardware articles & Layer preview)
+      const [keebArticles, setKeebArticles] = useState(KEEB_ARTICLES);
       const [readingKeebArticle, setReadingKeebArticle] = useState(null);
       const [keebLayer, setKeebLayer] = useState(0);
 
       // Helper to apply canonical state values to React state
       function applyCanonicalState(data) {
         if (!data || typeof data !== 'object') return;
-        if (data.bio) setBio(prev => ({ ...prev, ...data.bio }));
+        if (data.bio) {
+          const normalizedBio = {
+            ...data.bio,
+            logsRepo: normalizeRepoSlug(data.bio.logsRepo)
+          };
+          setBio(prev => ({ ...prev, ...normalizedBio }));
+        }
+        if (data.ui) {
+          setUiConfig(resolveUiConfig(data.ui));
+        }
+        if (Array.isArray(data.roadmapData) && data.roadmapData.length > 0) {
+          setRoadmapData(data.roadmapData);
+        }
+        if (Array.isArray(data.flaggoMilestones) && data.flaggoMilestones.length > 0) {
+          setFlaggoMilestones(data.flaggoMilestones);
+        }
         if (data.tasks) setTasks(data.tasks);
         if (data.gates) setGates(data.gates);
         if (data.opTasks) setOpTasks(data.opTasks);
@@ -1709,46 +2096,42 @@
         if (data.branch !== undefined) setBranch(data.branch);
         if (data.portfolio) setPortfolio(data.portfolio);
         if (data.applications) setApplications(data.applications);
+        if (Array.isArray(data.keebs) && data.keebs.length > 0) {
+          setKeebArticles(data.keebs);
+        }
       }
 
-      // 1. Load canonical state.json: tries GitHub Raw CDN first (instant GitOps), then local ./state.json
+      // 1. Load canonical state.json: hydrate same-origin ./state.json immediately, then overlay live GitHub Contents API
       async function loadCanonicalStateJson(targetRepo) {
-        const repoSlug = (targetRepo || bio.logsRepo || 'xarop-pa-toss/layer-zero').trim();
+        const repoSlug = normalizeRepoSlug(targetRepo || bio.logsRepo);
         const cacheBuster = Date.now();
         let syncSource = 'local';
         let loaded = false;
 
-        // Primary: GitHub Raw CDN (direct from main branch)
-        if (repoSlug && repoSlug.includes('/')) {
-          const rawEndpoints = [
-            `https://raw.githubusercontent.com/${repoSlug}/main/public/state.json?t=${cacheBuster}`,
-            `https://raw.githubusercontent.com/${repoSlug}/main/state.json?t=${cacheBuster}`
-          ];
-          for (const url of rawEndpoints) {
-            try {
-              const res = await fetch(url, { cache: 'no-store' });
-              if (res.ok) {
-                const data = await res.json();
-                if (data && (data.bio || data.tasks || data.opTasks)) {
-                  applyCanonicalState(data);
-                  syncSource = 'github';
-                  loaded = true;
-                  break;
-                }
-              }
-            } catch (e) {}
-          }
-        }
-
-        // Fallback: bundled local ./state.json
-        if (!loaded) {
-          try {
-            const res = await fetch(`./state.json?t=${cacheBuster}`, { cache: 'no-store' });
-            if (res.ok) {
-              const data = await res.json();
-              applyCanonicalState(data);
-              syncSource = 'local';
+        // Step A: Fast same-origin baseline hydration (instant render & rate-limit resilience)
+        try {
+          const localRes = await fetch(`./state.json?t=${cacheBuster}`, { cache: 'no-store' });
+          if (localRes.ok) {
+            const localData = await localRes.json();
+            if (localData && (localData.bio || localData.tasks || localData.opTasks)) {
+              applyCanonicalState(localData);
+              syncSource = isGitHubPagesHost() ? 'github' : 'local';
               loaded = true;
+            }
+          }
+        } catch (e) {}
+
+        // Step B: Live GitHub Contents API overlay (ensures commits pushed 1s ago take effect immediately on both xarop.link and AI Studio)
+        if (repoSlug && repoSlug.includes('/')) {
+          try {
+            const rawJsonText = await fetchGitHubFileText(repoSlug, 'public/state.json', 'main');
+            if (rawJsonText) {
+              const data = JSON.parse(rawJsonText);
+              if (data && (data.bio || data.tasks || data.opTasks)) {
+                applyCanonicalState(data);
+                syncSource = 'github';
+                loaded = true;
+              }
             }
           } catch (e) {}
         }
@@ -1758,10 +2141,10 @@
 
       // 2. Fetch latest commit on main branch for live GitOps status indicator
       async function fetchLatestRepoCommit(targetRepo) {
-        const repoSlug = (targetRepo || bio.logsRepo || 'xarop-pa-toss/layer-zero').trim();
+        const repoSlug = normalizeRepoSlug(targetRepo || bio.logsRepo);
         if (!repoSlug || !repoSlug.includes('/')) return null;
         try {
-          const res = await fetch(`https://api.github.com/repos/${repoSlug}/commits?per_page=1`, {
+          const res = await fetch(`https://api.github.com/repos/${repoSlug}/commits?sha=main&per_page=1&_t=${Date.now()}`, {
             headers: { 'Accept': 'application/vnd.github.v3+json' },
             cache: 'no-store'
           });
@@ -1781,52 +2164,58 @@
         return null;
       }
 
-      // 3. Load real Markdown logs from GitHub Contents API + local bundled logs
+      // 3. Load real Markdown logs: on GitHub Pages (xarop.link) load ./logs/index.json first; otherwise query GitHub Contents API first
       async function loadLogsFromGit(targetRepo, targetFolder) {
-        const repoSlug = (targetRepo || bio.logsRepo || 'xarop-pa-toss/layer-zero').trim();
+        const repoSlug = normalizeRepoSlug(targetRepo || bio.logsRepo);
         const folderPath = (targetFolder || bio.logsPath || 'logs').trim().replace(/^\/+|\/+$/g, '');
         const loadedPosts = [];
         const seenNames = new Set();
         const cacheBuster = Date.now();
+        let loadedFromGitHub = false;
 
-        // Step A: Load local repo Markdown files listed in ./logs/index.json
-        try {
-          const idxRes = await fetch(`./logs/index.json?t=${cacheBuster}`, { cache: 'no-store' });
-          if (idxRes.ok) {
-            const fileList = await idxRes.json();
-            if (Array.isArray(fileList)) {
-              for (const fileName of fileList) {
-                try {
-                  const mdRes = await fetch(`./logs/${fileName}?t=${cacheBuster}`, { cache: 'no-store' });
-                  if (mdRes.ok) {
-                    const rawText = await mdRes.text();
-                    const parsed = parseMarkdownWithFrontmatter(rawText, fileName);
-                    seenNames.add(fileName);
-                    loadedPosts.push({
-                      id: `local-md-${fileName}`,
-                      title: parsed.title,
-                      date: parsed.date,
-                      tags: parsed.tags,
-                      source: `logs/${fileName}`,
-                      summary: parsed.summary,
-                      content: parsed.content
-                    });
+        async function loadLocalBundledLogs(markAsGitHub = false) {
+          try {
+            const idxRes = await fetch(`./logs/index.json?t=${cacheBuster}`, { cache: 'no-store' });
+            if (idxRes.ok) {
+              const fileList = await idxRes.json();
+              if (Array.isArray(fileList)) {
+                for (const fileName of fileList) {
+                  if (!seenNames.has(fileName)) {
+                    try {
+                      const mdRes = await fetch(`./logs/${fileName}?t=${cacheBuster}`, { cache: 'no-store' });
+                      if (mdRes.ok) {
+                        const rawText = await mdRes.text();
+                        const parsed = parseMarkdownWithFrontmatter(rawText, fileName);
+                        seenNames.add(fileName);
+                        if (markAsGitHub) loadedFromGitHub = true;
+                        loadedPosts.push({
+                          id: `local-md-${fileName}`,
+                          title: parsed.title,
+                          date: parsed.date,
+                          tags: parsed.tags,
+                          source: `${repoSlug}/public/logs/${fileName}`,
+                          summary: parsed.summary,
+                          content: parsed.content
+                        });
+                      }
+                    } catch (e) {}
                   }
-                } catch (e) {}
+                }
               }
             }
-          }
-        } catch (e) {}
+          } catch (e) {}
+        }
 
-        // Step B: Check GitHub Contents API for markdown files in public/logs and logs
-        if (repoSlug && repoSlug.includes('/')) {
-          const candidatePaths = [
-            `public/${folderPath}`,
-            folderPath
-          ];
+        if (isGitHubPagesHost()) {
+          await loadLocalBundledLogs(true);
+        }
+
+        // Fetch live Markdown files from GitHub Contents API if not already loaded on GitHub Pages
+        if (loadedPosts.length === 0 && repoSlug && repoSlug.includes('/')) {
+          const candidatePaths = [`public/${folderPath}`, folderPath];
           for (const cPath of candidatePaths) {
             try {
-              const url = `https://api.github.com/repos/${repoSlug}/contents/${cPath}?ref=main`;
+              const url = `https://api.github.com/repos/${repoSlug}/contents/${cPath}?ref=main&_t=${cacheBuster}`;
               const res = await fetch(url, {
                 headers: { 'Accept': 'application/vnd.github.v3+json' },
                 cache: 'no-store'
@@ -1837,15 +2226,13 @@
                   const mdFiles = items.filter(f => f.type === 'file' && /\.(md|markdown|txt)$/i.test(f.name));
                   for (const fileItem of mdFiles.slice(0, 30)) {
                     if (!seenNames.has(fileItem.name)) {
-                      // Fetch raw content with cache-buster
-                      const rawUrl = fileItem.download_url || `https://raw.githubusercontent.com/${repoSlug}/main/${fileItem.path}`;
-                      const rawRes = await fetch(`${rawUrl}${rawUrl.includes('?') ? '&' : '?'}t=${cacheBuster}`);
-                      if (rawRes.ok) {
-                        const rawText = await rawRes.text();
+                      const rawText = await fetchGitHubFileText(repoSlug, fileItem.path, 'main', fileItem.sha);
+                      if (rawText) {
                         const parsed = parseMarkdownWithFrontmatter(rawText, fileItem.name);
                         seenNames.add(fileItem.name);
+                        loadedFromGitHub = true;
                         loadedPosts.push({
-                          id: 'gh-md-' + fileItem.sha,
+                          id: 'gh-md-' + (fileItem.sha || fileItem.name),
                           title: parsed.title,
                           date: parsed.date,
                           tags: parsed.tags,
@@ -1857,17 +2244,93 @@
                     }
                   }
                 }
+                if (loadedPosts.length > 0) break;
               }
             } catch (e) {}
           }
         }
 
+        // Fallback: load local bundled ./logs/*.md if still empty
+        if (loadedPosts.length === 0) {
+          await loadLocalBundledLogs(false);
+        }
+
         if (loadedPosts.length > 0) {
           loadedPosts.sort((a, b) => String(b.date).localeCompare(String(a.date)));
           setPosts(loadedPosts);
-          setRepoLogsStatus(`Synced ${loadedPosts.length} Markdown log(s) from Git.`);
+          setRepoLogsStatus(`Synced ${loadedPosts.length} Markdown log(s) from ${loadedFromGitHub ? repoSlug : 'local bundle'}.`);
         }
-        return loadedPosts.length;
+        return { count: loadedPosts.length, fromGitHub: loadedFromGitHub };
+      }
+
+      // 3b. Load Keebs hardware articles from ./keebs/index.json + GitHub Contents API (public/keebs/*.md) with zero 404s
+      async function loadKeebsFromGit(targetRepo) {
+        const repoSlug = normalizeRepoSlug(targetRepo || bio.logsRepo);
+        const loadedKeebs = [];
+        const seenNames = new Set();
+        const cacheBuster = Date.now();
+
+        // Check if public/keebs directory exists on GitHub before querying individual files
+        if (repoSlug && repoSlug.includes('/')) {
+          try {
+            const pubRes = await fetch(`https://api.github.com/repos/${repoSlug}/contents/public?ref=main&_t=${cacheBuster}`, {
+              headers: { 'Accept': 'application/vnd.github.v3+json' },
+              cache: 'no-store'
+            });
+            if (pubRes.ok) {
+              const pubItems = await pubRes.json();
+              const hasRemoteKeebs = Array.isArray(pubItems) && pubItems.some(item => item.type === 'dir' && item.name === 'keebs');
+              if (hasRemoteKeebs) {
+                const keebsRes = await fetch(`https://api.github.com/repos/${repoSlug}/contents/public/keebs?ref=main&_t=${cacheBuster}`, {
+                  headers: { 'Accept': 'application/vnd.github.v3+json' },
+                  cache: 'no-store'
+                });
+                if (keebsRes.ok) {
+                  const keebItems = await keebsRes.json();
+                  if (Array.isArray(keebItems)) {
+                    const mdFiles = keebItems.filter(f => f.type === 'file' && /\.(md|markdown|txt)$/i.test(f.name));
+                    for (const fileItem of mdFiles.slice(0, 20)) {
+                      if (!seenNames.has(fileItem.name)) {
+                        const rawText = await fetchGitHubFileText(repoSlug, fileItem.path, 'main', fileItem.sha);
+                        if (rawText) {
+                          loadedKeebs.push(parseKeebMarkdown(rawText, fileItem.name));
+                          seenNames.add(fileItem.name);
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          } catch (e) {}
+        }
+
+        // Load bundled same-origin ./keebs/*.md for any articles not yet on remote
+        try {
+          const idxRes = await fetch(`./keebs/index.json?t=${cacheBuster}`, { cache: 'no-store' });
+          if (idxRes.ok) {
+            const fileList = await idxRes.json();
+            if (Array.isArray(fileList)) {
+              for (const fileName of fileList) {
+                if (!seenNames.has(fileName)) {
+                  const mdRes = await fetch(`./keebs/${fileName}?t=${cacheBuster}`, { cache: 'no-store' });
+                  if (mdRes.ok) {
+                    const rawText = await mdRes.text();
+                    if (rawText) {
+                      loadedKeebs.push(parseKeebMarkdown(rawText, fileName));
+                      seenNames.add(fileName);
+                    }
+                  }
+                }
+              }
+            }
+          }
+        } catch (e) {}
+
+        if (loadedKeebs.length > 0) {
+          setKeebArticles(loadedKeebs);
+        }
+        return loadedKeebs.length;
       }
 
       // 4. Fetch real GitHub activity & repositories for xarop-pa-toss
@@ -1973,32 +2436,36 @@
         setGitOpsSync(prev => ({ ...prev, status: 'syncing' }));
         setGitSyncStatus('Synchronizing live state and logs from GitHub...');
 
-        const repoSlug = (bio.logsRepo || 'xarop-pa-toss/layer-zero').trim();
+        const repoSlug = normalizeRepoSlug(bio.logsRepo);
 
         // Run sync operations in parallel
-        const [syncSource, commitInfo, logCount] = await Promise.all([
+        const [stateSource, commitInfo, logResult] = await Promise.all([
           loadCanonicalStateJson(repoSlug),
           fetchLatestRepoCommit(repoSlug),
           loadLogsFromGit(repoSlug, bio.logsPath || 'logs'),
+          loadKeebsFromGit(repoSlug),
           fetchLiveGitActivity()
         ]);
 
+        const effectiveSource = (stateSource === 'github' || (logResult && logResult.fromGitHub)) ? 'github' : 'local';
         const now = new Date();
         const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
         setGitOpsSync({
-          status: syncSource === 'github' ? 'synced' : 'fallback',
-          source: syncSource,
+          status: effectiveSource === 'github' ? 'synced' : 'fallback',
+          source: effectiveSource,
           repo: repoSlug,
           branch: 'main',
           lastCommitSha: commitInfo ? commitInfo.sha : '',
           lastCommitMsg: commitInfo ? commitInfo.message : '',
           lastCommitDate: commitInfo ? commitInfo.date : '',
           lastSyncedAt: timeStr,
-          logCount: logCount || 0
+          logCount: (logResult && logResult.count) || 0,
+          bootMode: (typeof window !== 'undefined' && window.__LZ_BOOT_MODE__) || 'github-verified',
+          indexBlobSha: (typeof window !== 'undefined' && window.__LZ_INDEX_BLOB_SHA__) || ''
         });
 
-        if (syncSource === 'github') {
+        if (effectiveSource === 'github') {
           setGitSyncStatus(`GitOps live: synced from github.com/${repoSlug}@${commitInfo ? commitInfo.sha : 'main'} at ${timeStr}.`);
         } else {
           setGitSyncStatus(`Synced at ${timeStr} (using bundled repo state; head commit ${commitInfo ? commitInfo.sha : 'local'}).`);
@@ -2027,25 +2494,25 @@
         let totalTasks = 0;
         let independentTasks = 0;
         let aiTasks = 0;
-        ROADMAP_DATA.forEach(w => {
-          w.tasks.forEach(t => {
+        roadmapData.forEach(w => {
+          (w.tasks || []).forEach(t => {
             totalTasks++;
             if (tasks[t.id] === STATUS.INDEPENDENT) independentTasks++;
             if (tasks[t.id] === STATUS.AI_ASSISTED) aiTasks++;
           });
         });
-        const totalGates = ROADMAP_DATA.length;
-        const passedGates = ROADMAP_DATA.filter(w => gates[w.gate.id] === STATUS.INDEPENDENT).length;
+        const totalGates = roadmapData.length;
+        const passedGates = roadmapData.filter(w => w.gate && gates[w.gate.id] === STATUS.INDEPENDENT).length;
 
         let opTotal = 0;
         let opInd = 0;
-        FLAGGO_MILESTONES.forEach(m => {
-          m.tasks.forEach(t => {
+        flaggoMilestones.forEach(m => {
+          (m.tasks || []).forEach(t => {
             opTotal++;
             if (opTasks[t.id] === STATUS.INDEPENDENT) opInd++;
           });
         });
-        const opPassedGates = FLAGGO_MILESTONES.filter(m => opGates[m.gateId] === STATUS.INDEPENDENT).length;
+        const opPassedGates = flaggoMilestones.filter(m => opGates[m.gateId] === STATUS.INDEPENDENT).length;
 
         return {
           totalTasks,
@@ -2058,9 +2525,9 @@
           opInd,
           opPercent: Math.round((opInd / opTotal) * 100) || 0,
           opPassedGates,
-          opTotalGates: FLAGGO_MILESTONES.length
+          opTotalGates: flaggoMilestones.length
         };
-      }, [tasks, gates, opTasks, opGates]);
+      }, [tasks, gates, opTasks, opGates, roadmapData, flaggoMilestones]);
 
       const allTags = useMemo(() => {
         const s = new Set();
@@ -2083,12 +2550,12 @@
         });
       }, [posts, selectedTag, searchQuery]);
 
-      // --- SECTION 1: HOME PAGE ("THE LOGS" + WORKSTATION WELCOME — STRICTLY READ-ONLY) ---
+      // --- SECTION 1: HOME PAGE ("THE LOGS" + WORKSTATION WELCOME — DRIVEN BY state.json ui.hero) ---
       const renderHomeLogs = () => h('div', { style: { display: 'flex', flexDirection: 'column', gap: '2.75rem' } },
         // Spacious OS Window Hero
         h('section', { className: 'os-window' },
           h('div', { className: 'os-titlebar' },
-            h('span', null, `Layer Zero — ${bio.name}`),
+            h('span', null, uiConfig.hero.windowTitle || `Layer Zero — ${bio.name}`),
             h('span', null, `@${bio.handle}`)
           ),
           h('div', { style: { padding: '2.25rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' } },
@@ -2096,36 +2563,45 @@
               h('h1', {
                 className: 'font-display',
                 style: { fontSize: 'clamp(1.85rem, 3.2vw, 2.6rem)', fontWeight: 700, color: '#512B58', lineHeight: 1.18 }
-              }, 'Ricardo Giro — Infrastructure, DevOps & Engineering Hub'),
+              }, uiConfig.hero.headline),
               h('p', { style: { fontSize: '1.02rem', color: '#231926' } }, bio.summary),
               h('p', { style: { fontSize: '0.95rem', color: '#4E5D63' } },
-                'Active Roadmap Project: ',
-                h('strong', { style: { color: '#512B58' } }, 'Flaggo'),
-                ' — a lightweight, self-hosted 4-app Feature Flag & Runtime Configuration Platform decoupling code deployment from feature release.'
+                `${uiConfig.hero.activeProjectLabel} `,
+                h('strong', { style: { color: '#512B58' } }, uiConfig.hero.activeProjectName),
+                ` ${uiConfig.hero.activeProjectText}`
               )
             ),
             h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: '0.85rem', paddingTop: '1.25rem', borderTop: '1px solid rgba(42, 120, 134, 0.3)' } },
-              h('button', {
-                type: 'button',
-                onClick: () => setMainSection('operation'),
-                className: 'os-btn os-btn-primary'
-              }, `Operation Flaggo (${progressStats.opPassedGates}/${progressStats.opTotalGates} Gates)`),
-              h('button', {
-                type: 'button',
-                onClick: () => setMainSection('roadmap'),
-                className: 'os-btn os-btn-teal'
-              }, `DevOps Roadmap (${progressStats.completionPercent}%)`),
-              h('button', {
-                type: 'button',
-                onClick: () => setMainSection('projects'),
-                className: 'os-btn'
-              }, 'Other Stuff'),
-              h('a', {
-                href: bio.githubUrl,
-                target: '_blank',
-                rel: 'noreferrer',
-                className: 'os-btn'
-              }, 'GitHub ->')
+              ...uiConfig.hero.buttons.map(btn => {
+                const variantClass = btn.variant === 'primary'
+                  ? 'os-btn os-btn-primary'
+                  : btn.variant === 'teal'
+                  ? 'os-btn os-btn-teal'
+                  : 'os-btn';
+                const resolvedLabel = interpolateButtonLabel(btn.label, progressStats);
+                if (btn.actionType === 'external') {
+                  return h('a', {
+                    key: btn.id || btn.label,
+                    href: btn.target || bio.githubUrl,
+                    target: '_blank',
+                    rel: 'noreferrer',
+                    className: variantClass
+                  }, resolvedLabel);
+                }
+                return h('button', {
+                  key: btn.id || btn.label,
+                  type: 'button',
+                  onClick: () => {
+                    if (btn.actionType === 'scroll') {
+                      const el = document.querySelector(btn.target);
+                      if (el) el.scrollIntoView({ behavior: 'smooth' });
+                    } else {
+                      setMainSection(btn.target || 'logs');
+                    }
+                  },
+                  className: variantClass
+                }, resolvedLabel);
+              })
             )
           )
         ),
@@ -2150,7 +2626,7 @@
                     backgroundColor: gitOpsSync.status === 'syncing' ? '#FFA500' : (gitOpsSync.source === 'github' ? '#2A7886' : '#512B58')
                   }
                 }),
-                gitOpsSync.lastCommitSha ? `xarop-pa-toss/layer-zero@${gitOpsSync.lastCommitSha}` : 'GitOps Connected'
+                gitOpsSync.lastCommitSha ? `${gitOpsSync.repo}@${gitOpsSync.lastCommitSha}` : 'GitOps Connected'
               ),
               h('input', {
                 type: 'search',
@@ -2288,7 +2764,7 @@
           )
         ),
 
-        ...FLAGGO_MILESTONES.map(ms => {
+        ...flaggoMilestones.map(ms => {
           const msDoneCount = ms.tasks.filter(t => opTasks[t.id] === STATUS.INDEPENDENT).length;
           const msAiCount = ms.tasks.filter(t => opTasks[t.id] === STATUS.AI_ASSISTED).length;
           const gateState = opGates[ms.gateId] || STATUS.PENDING;
@@ -2505,7 +2981,7 @@
 
         // 12-Week Plan
         roadmapSubTab === 'plan' ? h('div', { style: { display: 'flex', flexDirection: 'column', gap: '1.75rem' } },
-          ...ROADMAP_DATA.map(week =>
+          ...roadmapData.map(week =>
             h('div', { key: week.id, className: 'os-window' },
               h('div', { className: 'os-titlebar' },
                 h('span', null, week.title.toUpperCase()),
@@ -2769,9 +3245,9 @@
           )
         ),
 
-        // Grid with the two Keyboard Cards & Articles
+        // Grid with the Keyboard Cards & Articles (Loaded live from public/keebs/*.md)
         h('div', { className: 'grid-2' },
-          ...KEEB_ARTICLES.map(article =>
+          ...keebArticles.map(article =>
             h('article', { key: article.id, className: 'os-window', style: { display: 'flex', flexDirection: 'column' } },
               h('div', { className: 'os-titlebar os-titlebar-teal' },
                 h('span', null, `${article.name} — Hardware Specification`),
@@ -2780,7 +3256,7 @@
               h('div', { style: { padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.25rem', flex: 1 } },
                 // Interactive SVG Schematic
                 h('div', { style: { borderRadius: '2px', overflow: 'hidden' } },
-                  article.id === 'lily58' ? h(Lily58Svg, { layer: keebLayer }) : h(Lotus58Svg, { layer: keebLayer })
+                  (article.diagram === 'lily58' || article.id === 'lily58') ? h(Lily58Svg, { layer: keebLayer }) : h(Lotus58Svg, { layer: keebLayer })
                 ),
 
                 // Tags & Date
@@ -2877,32 +3353,38 @@
           )
         ),
 
-        // GitOps Engine & Terminal Workflow Architecture
+        // GitOps Engine & Dual-Host Workflow Architecture
         h('section', { className: 'os-window' },
           h('div', { className: 'os-titlebar' },
-            h('span', null, 'GitOps Engine & Terminal Workflow'),
+            h('span', null, 'Dual-Host GitOps Engine (GitHub Pages + AI Studio)'),
             h('span', null, `Repo: ${gitOpsSync.repo}@${gitOpsSync.branch}`)
           ),
           h('div', { style: { padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' } },
             h('div', { style: { maxWidth: '75ch', display: 'flex', flexDirection: 'column', gap: '0.65rem' } },
               h('h2', { className: 'font-display', style: { fontSize: '1.65rem', fontWeight: 700, color: '#512B58' } },
-                'How Automatic Updates Work (Zero-Maintenance GitOps)'
+                'Dual-Host Autonomy: Update from AI Studio or Local Git CLI'
               ),
               h('p', { style: { fontSize: '0.96rem', color: '#231926', lineHeight: 1.6 } },
-                'Layer Zero is engineered with a client-side GitOps architecture. When you push commits to your public GitHub repository (',
+                'Your public GitHub repository (',
                 h('strong', { style: { color: '#2A7886' } }, gitOpsSync.repo),
-                '), visitor browsers query the GitHub API and GitHub Raw CDN on every page load with cache-busting headers. There is no need for webhook servers, manual rebuilds, or container redeployments.'
+                ') acts as the shared bridge between ',
+                h('strong', { style: { color: '#512B58' } }, 'GitHub Pages (xarop.link)'),
+                ' and ',
+                h('strong', { style: { color: '#512B58' } }, 'AI Studio (layer-zero.ai.studio)'),
+                '. You can update the website from AI Studio or from your local terminal at any time—both hosts stay synchronized.'
               )
             ),
 
             // Live Telemetry Grid
             h('div', { className: 'grid-2', style: { gap: '1rem' } },
               h('div', { className: 'os-panel', style: { padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.45rem' } },
-                h('div', { className: 'font-mono', style: { fontSize: '11px', color: '#4E5D63' } }, 'GITOPS TARGET REPOSITORY'),
+                h('div', { className: 'font-mono', style: { fontSize: '11px', color: '#4E5D63' } }, 'ACTIVE HOST & GITOPS BRIDGE'),
                 h('div', { className: 'font-mono', style: { fontSize: '13px', fontWeight: 600, color: '#512B58' } },
                   h('a', { href: `https://github.com/${gitOpsSync.repo}`, target: '_blank', rel: 'noreferrer' }, `${gitOpsSync.repo} ↗`)
                 ),
-                h('div', { style: { fontSize: '0.85rem', color: '#231926' } }, `Branch: ${gitOpsSync.branch} · Monitored folders: /public/state.json, /public/logs/`)
+                h('div', { style: { fontSize: '0.85rem', color: '#231926' } },
+                  `Host: ${detectHostEnvironment().label} · Bootloader: index.html (${gitOpsSync.indexBlobSha ? '@' + gitOpsSync.indexBlobSha : 'active'})`
+                )
               ),
               h('div', { className: 'os-panel', style: { padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.45rem' } },
                 h('div', { className: 'font-mono', style: { fontSize: '11px', color: '#4E5D63' } }, 'LIVE SYNC TELEMETRY'),
@@ -2911,46 +3393,63 @@
                   gitOpsSync.lastCommitSha ? `HEAD Commit: @${gitOpsSync.lastCommitSha}` : 'Status: Ready'
                 ),
                 h('div', { style: { fontSize: '0.85rem', color: '#231926' } },
-                  `Source: ${gitOpsSync.source === 'github' ? 'GitHub Raw API (Live)' : 'Local Bundled (Fallback)'} · Last sync: ${gitOpsSync.lastSyncedAt || 'On load'}`
+                  `Source: ${gitOpsSync.source === 'github' ? 'GitHub Contents API + Static Bundle' : 'Local Bundled (Fallback)'} · Last sync: ${gitOpsSync.lastSyncedAt || 'On load'}`
                 )
               )
             ),
 
-            // 2-Column CLI Workflow Reference
-            h('div', { className: 'grid-2', style: { gap: '1rem' } },
+            // 3-Column Dual Workflow & DNS Reference
+            h('div', { className: 'grid-3', style: { gap: '1rem' } },
               h('div', { className: 'os-panel', style: { padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.65rem' } },
-                h('div', { className: 'font-mono', style: { fontSize: '12px', fontWeight: 600, color: '#512B58' } }, '01. Publishing a New Log Dispatch'),
-                h('p', { style: { fontSize: '0.88rem', color: '#231926' } },
-                  'Create a markdown file in ',
-                  h('code', { className: 'font-mono', style: { backgroundColor: '#E6ECEE', padding: '2px 4px', fontSize: '11.5px' } }, 'public/logs/YYYY-MM-DD-title.md'),
-                  ' with frontmatter, then commit and push:'
+                h('div', { className: 'font-mono', style: { fontSize: '12px', fontWeight: 600, color: '#512B58' } }, '01. Update from AI Studio'),
+                h('p', { style: { fontSize: '0.86rem', color: '#231926' } },
+                  'Prompt UI or content changes here in AI Studio, then click ',
+                  h('strong', { style: { color: '#512B58' } }, 'GitHub Sync / Push'),
+                  ' in the AI Studio header:'
                 ),
                 h('pre', { className: 'font-mono', style: { backgroundColor: '#231926', color: '#79BAC1', padding: '0.75rem', fontSize: '11px', overflowX: 'auto', borderRadius: '2px', lineHeight: 1.5 } },
-                  `git add public/logs/\ngit commit -m "log: new dispatch"\ngit push origin main`
+                  `AI Studio -> Push to GitHub\n├─► Auto-deploys xarop.link\n└─► Updates layer-zero.ai.studio`
                 )
               ),
               h('div', { className: 'os-panel', style: { padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.65rem' } },
-                h('div', { className: 'font-mono', style: { fontSize: '12px', fontWeight: 600, color: '#2A7886' } }, '02. Updating Roadmap & Flaggo Progress'),
-                h('p', { style: { fontSize: '0.88rem', color: '#231926' } },
-                  'Edit task statuses in ',
-                  h('code', { className: 'font-mono', style: { backgroundColor: '#E6ECEE', padding: '2px 4px', fontSize: '11.5px' } }, 'public/state.json'),
-                  ' ("pending" -> "independent" / "ai_assisted"), then push:'
+                h('div', { className: 'font-mono', style: { fontSize: '12px', fontWeight: 600, color: '#2A7886' } }, '02. Update from Local Terminal'),
+                h('p', { style: { fontSize: '0.86rem', color: '#231926' } },
+                  'Edit ',
+                  h('code', { className: 'font-mono', style: { backgroundColor: '#E6ECEE', padding: '2px 4px', fontSize: '11px' } }, 'public/logs/*.md'),
+                  ', ',
+                  h('code', { className: 'font-mono', style: { backgroundColor: '#E6ECEE', padding: '2px 4px', fontSize: '11px' } }, 'public/state.json'),
+                  ', or ',
+                  h('code', { className: 'font-mono', style: { backgroundColor: '#E6ECEE', padding: '2px 4px', fontSize: '11px' } }, 'index.html'),
+                  ' and push:'
                 ),
                 h('pre', { className: 'font-mono', style: { backgroundColor: '#231926', color: '#79BAC1', padding: '0.75rem', fontSize: '11px', overflowX: 'auto', borderRadius: '2px', lineHeight: 1.5 } },
-                  `git add public/state.json\ngit commit -m "roadmap: milestone updated"\ngit push origin main`
+                  `git add .\ngit commit -m "update content"\ngit push origin main`
+                )
+              ),
+              h('div', { className: 'os-panel', style: { padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.65rem' } },
+                h('div', { className: 'font-mono', style: { fontSize: '12px', fontWeight: 600, color: '#512B58' } }, '03. GitHub Pages DNS (xarop.link)'),
+                h('p', { style: { fontSize: '0.86rem', color: '#231926' } },
+                  'Set GitHub Pages source to ',
+                  h('strong', { style: { color: '#2A7886' } }, 'GitHub Actions'),
+                  ' and add these DNS records at your registrar:'
+                ),
+                h('pre', { className: 'font-mono', style: { backgroundColor: '#231926', color: '#79BAC1', padding: '0.75rem', fontSize: '11px', overflowX: 'auto', borderRadius: '2px', lineHeight: 1.5 } },
+                  `A     @    185.199.108.153 (..111)\nCNAME www  xarop-pa-toss.github.io`
                 )
               )
             ),
 
             h('div', { style: { display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', paddingTop: '0.75rem', borderTop: '1px solid rgba(42, 120, 134, 0.28)' } },
               h('div', { className: 'font-mono', style: { fontSize: '11.5px', color: '#4E5D63' } },
-                'Full instructions documented in repo root: GITOPS_GUIDE.md'
+                'Full GitHub Pages & Custom Domain (xarop.link) setup in: GITOPS_GUIDE.md'
               ),
-              h('button', {
-                type: 'button',
-                onClick: () => triggerGitOpsSync(false),
-                className: 'os-btn os-btn-teal'
-              }, gitOpsSync.status === 'syncing' ? 'Syncing...' : 'Force Sync Now ↻')
+              h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: '0.65rem' } },
+                h('button', {
+                  type: 'button',
+                  onClick: () => triggerGitOpsSync(false),
+                  className: 'os-btn os-btn-teal'
+                }, gitOpsSync.status === 'syncing' ? 'Syncing...' : 'Force Sync Now ↻')
+              )
             )
           )
         ),
@@ -3012,23 +3511,17 @@
       }, [githubCommits, giteaCommits, bio.githubUser, bio.giteaBaseUrl, bio.giteaUser, gitSyncStatus]);
 
       return h('div', { style: { minHeight: '100vh', display: 'flex', flexDirection: 'column' } },
-        // --- 3-ZONE TOP BAR: "Layer Zero" | 5 Nav Links | Bio Button ---
+        // --- 3-ZONE TOP BAR: Brand Title | Declarative Nav Links | Bio Button ---
         h('header', { className: 'top-bar' },
           h('button', {
             type: 'button',
             onClick: () => setMainSection('logs'),
             className: 'font-display',
             style: { fontSize: '1.35rem', fontWeight: 700, color: '#512B58', whiteSpace: 'nowrap', flexShrink: 0 }
-          }, 'Layer Zero'),
+          }, uiConfig.brandTitle || 'Layer Zero'),
 
           h('nav', { className: 'nav-links', ariaLabel: 'Main Navigation' },
-            ...[
-              { id: 'logs', label: 'The Logs' },
-              { id: 'roadmap', label: 'DevOps Roadmap' },
-              { id: 'operation', label: 'Operation Flaggo' },
-              { id: 'keebs', label: 'Keebs' },
-              { id: 'projects', label: 'Other Stuff' }
-            ].map(item =>
+            ...uiConfig.navItems.map(item =>
               h('button', {
                 key: item.id,
                 type: 'button',
@@ -3118,13 +3611,19 @@
         ) : null,
 
         // --- KEEBS ARTICLE READER MODAL ---
-        readingKeebArticle ? h('div', { className: 'modal-backdrop', role: 'dialog', ariaModal: 'true', ariaLabel: readingKeebArticle.title },
-          h('div', { className: 'os-window', style: { width: '100%', maxWidth: '780px', maxHeight: '88vh', display: 'flex', flexDirection: 'column' } },
+        readingKeebArticle ? h('div', {
+          className: 'modal-backdrop',
+          role: 'dialog',
+          ariaModal: 'true',
+          ariaLabel: readingKeebArticle.title,
+          onClick: (e) => { if (e.target === e.currentTarget) setReadingKeebArticle(null); }
+        },
+          h('div', { className: 'os-window', style: { width: '95vw', maxWidth: '1040px', maxHeight: '88vh', display: 'flex', flexDirection: 'column' } },
             h('div', { className: 'os-titlebar os-titlebar-teal' },
               h('span', null, `${readingKeebArticle.name} — Hardware Article & Build Log`),
               h('button', { type: 'button', onClick: () => setReadingKeebArticle(null), style: { color: '#FFFFFF', fontWeight: 700 } }, '[X]')
             ),
-            h('div', { style: { padding: '2rem', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1.5rem' } },
+            h('div', { style: { padding: '2rem 2.25rem', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1.5rem' } },
               h('div', null,
                 h('div', { className: 'font-mono', style: { fontSize: '12px', color: '#2A7886', marginBottom: '0.35rem' } },
                   `${readingKeebArticle.date} · ${readingKeebArticle.readTime} · ${(readingKeebArticle.tags || []).map(t => '#' + t).join(' ')}`
@@ -3135,26 +3634,28 @@
 
               // Embedded interactive schematic
               h('div', { style: { border: '1px solid #2A7886' } },
-                readingKeebArticle.id === 'lily58' ? h(Lily58Svg, { layer: keebLayer }) : h(Lotus58Svg, { layer: keebLayer })
+                (readingKeebArticle.diagram === 'lily58' || readingKeebArticle.id === 'lily58') ? h(Lily58Svg, { layer: keebLayer }) : h(Lotus58Svg, { layer: keebLayer })
               ),
 
               // Specs grid
-              h('div', { className: 'grid-2', style: { gap: '0.75rem' } },
+              (readingKeebArticle.specs && readingKeebArticle.specs.length > 0) ? h('div', { className: 'grid-2', style: { gap: '0.75rem' } },
                 ...readingKeebArticle.specs.map(s =>
                   h('div', { key: s.label, className: 'os-panel', style: { padding: '0.65rem 0.85rem' } },
                     h('div', { className: 'font-mono', style: { fontSize: '11px', color: '#4E5D63' } }, s.label),
                     h('div', { className: 'font-mono', style: { fontSize: '12px', color: '#512B58', fontWeight: 600, marginTop: '2px' } }, s.val)
                   )
                 )
-              ),
+              ) : null,
 
-              // Content sections
-              ...readingKeebArticle.sections.map(sec =>
-                h('section', { key: sec.heading, style: { display: 'flex', flexDirection: 'column', gap: '0.45rem' } },
-                  h('h3', { className: 'font-display', style: { fontSize: '1.25rem', fontWeight: 700, color: '#512B58' } }, sec.heading),
-                  h('p', { style: { fontSize: '0.96rem', lineHeight: 1.7, color: '#231926' } }, sec.text)
-                )
-              ),
+              // Full Markdown Content or Fallback Sections
+              readingKeebArticle.content
+                ? h(MarkdownRenderer, { content: readingKeebArticle.content })
+                : (readingKeebArticle.sections || []).map(sec =>
+                    h('section', { key: sec.heading, style: { display: 'flex', flexDirection: 'column', gap: '0.45rem' } },
+                      h('h3', { className: 'font-display', style: { fontSize: '1.25rem', fontWeight: 700, color: '#512B58' } }, sec.heading),
+                      h('p', { style: { fontSize: '0.96rem', lineHeight: 1.7, color: '#231926' } }, sec.text)
+                    )
+                  ),
 
               h('div', { style: { display: 'flex', justifyContent: 'flex-end', paddingTop: '1.25rem', borderTop: '1px solid rgba(42, 120, 134, 0.3)' } },
                 h('button', { type: 'button', onClick: () => setReadingKeebArticle(null), className: 'os-btn os-btn-primary' }, 'Close Article')
@@ -3257,8 +3758,23 @@
       );
     }
 
-    const root = ReactDOM.createRoot(document.getElementById('root'));
-    root.render(React.createElement(App));
+    async function mountLayerZeroApp() {
+      if (!window.__LZ_REMOTE_ACTIVE__) {
+        const bootedFromRemote = await bootFromGitHubIndexHtml(DEFAULT_REPO_SLUG, 'main');
+        if (bootedFromRemote) {
+          return;
+        }
+      }
+      const rootEl = document.getElementById('root');
+      if (rootEl) {
+        if (!window.__LZ_REACT_ROOT__) {
+          window.__LZ_REACT_ROOT__ = ReactDOM.createRoot(rootEl);
+        }
+        window.__LZ_REACT_ROOT__.render(React.createElement(App));
+      }
+    }
+
+    mountLayerZeroApp();
   </script>
 </body>
 </html>
