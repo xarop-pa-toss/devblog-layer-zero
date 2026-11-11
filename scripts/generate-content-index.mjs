@@ -21,3 +21,20 @@ function generateFolderIndex(relFolder) {
 
 generateFolderIndex('public/logs');
 generateFolderIndex('public/keebs');
+
+if (process.argv.includes('--bundle-dist')) {
+  const distDir = path.join(rootDir, 'dist');
+  const publicDir = path.join(rootDir, 'public');
+  const indexHtml = path.join(rootDir, 'index.html');
+
+  fs.rmSync(distDir, { recursive: true, force: true });
+  fs.mkdirSync(distDir, { recursive: true });
+
+  if (fs.existsSync(publicDir)) {
+    fs.cpSync(publicDir, distDir, { recursive: true });
+  }
+  if (fs.existsSync(indexHtml)) {
+    fs.copyFileSync(indexHtml, path.join(distDir, 'index.html'));
+  }
+  console.log('[content-index] Assembled static dist/ directory for GitHub Pages deployment.');
+}
