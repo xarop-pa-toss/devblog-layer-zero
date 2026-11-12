@@ -1,13 +1,11 @@
 ---
 title: "On GitOps, or how I run this blog using Git!"
 date: "2026-10-20"
-tags: [git, layer-zero, gitops]
-summary: "How Layer Zero loads Markdown log entries from logs/*.md and roadmap/Operation Flaggo state from state.json committed to a Git repo."
+tags: [git, xarop-link, gitops]
+summary: "How xarop.link loads Markdown log entries from logs/*.md and roadmap/Operation Flaggo state from state.json committed to a Git repo."
 ---
 
-test!!
-
-Layer Zero is strictly read-only on the web. 
+xarop.link is strictly read-only on the web. 
 Every visitor sees the exact canonical state committed to the [Git repository](https://github.com/xarop-pa-toss/devblog-layer-zero).
 There's no admin panel or secret edit mode activation and this is by design!
 
@@ -26,7 +24,7 @@ Post body here...
 ```
 ---
 
-Since Layer Zero is both a personal blog and a place for me to keep track of my roadmaps, I have added simple states to each task.
+Since xarop.link is both a personal blog and a place for me to keep track of my roadmaps, I have added simple states to each task.
 Editing those is just as simple! There is a state.json file where I change the flags per task ID, the objective being to have all of them as Independent.
 
-Finally, all that's needed is to push the changes to the repo and Github handles the rest... for now :)
+Finally, all that's needed is to push the changes to the repo and GitHub handles the rest... for now :)

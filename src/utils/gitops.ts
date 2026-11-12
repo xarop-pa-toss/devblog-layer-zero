@@ -1,5 +1,5 @@
 export const DEFAULT_REPO_SLUG = 'xarop-pa-toss/devblog-layer-zero';
-export const BASELINE_GITHUB_INDEX_SHA = 'c1d70da4bb32cd879a59b349cdd738f936e8e32c';
+export const BASELINE_GITHUB_INDEX_SHA = '980863e5917f5c4f147b89fe47b86975e32c5eb6';
 
 export interface HeroButtonConfig {
   id: string;
@@ -30,14 +30,14 @@ export interface UiConfig {
 }
 
 export const DEFAULT_UI_CONFIG: UiConfig = {
-  brandTitle: 'Layer Zero',
+  brandTitle: 'xarop.link',
   hero: {
-    windowTitle: 'Layer Zero — Ricardo Giro',
-    headline: 'Ricardo Giro — Infrastructure, DevOps & Engineering Hub',
-    activeProjectLabel: 'Active Roadmap Project:',
+    windowTitle: 'xarop.link — Ricardo Giro',
+    headline: 'Ricardo Giro — Infrastructure, DevOps & .NET',
+    activeProjectLabel: 'Active Project:',
     activeProjectName: 'Flaggo',
     activeProjectText:
-      '— a lightweight, self-hosted 4-app Feature Flag & Runtime Configuration Platform decoupling code deployment from feature release.',
+      '— self-hosted 4-app feature flag & runtime config platform.',
     buttons: [
       {
         id: 'btn-flaggo',
@@ -77,7 +77,6 @@ export const DEFAULT_UI_CONFIG: UiConfig = {
     { id: 'logs', label: 'The Logs', enabled: true },
     { id: 'roadmap', label: 'DevOps Roadmap', enabled: true },
     { id: 'operation', label: 'Operation Flaggo', enabled: true },
-    { id: 'keebs', label: 'Keebs', enabled: true },
     { id: 'projects', label: 'Other Stuff', enabled: true },
   ],
 };
@@ -109,7 +108,7 @@ export function detectHostEnvironment(hostname?: string | null): {
     return { id: 'github-pages', label: 'GitHub Pages (xarop.link)' };
   }
   if (host.endsWith('.ai.studio') || host.endsWith('.run.app')) {
-    return { id: 'ai-studio', label: 'AI Studio (layer-zero.ai.studio)' };
+    return { id: 'ai-studio', label: 'AI Studio' };
   }
   return { id: 'local', label: 'Local Workstation' };
 }
@@ -149,7 +148,6 @@ export function extractHtmlBootPayload(rawHtml: string): {
   while ((scriptMatch = scriptRegex.exec(html)) !== null) {
     const attrs = scriptMatch[1] || '';
     const body = scriptMatch[2] || '';
-    // Skip external <script src="..."> tags
     if (/\bsrc\s*=/i.test(attrs)) continue;
     if (body.trim().length > appScript.length) {
       appScript = body.replace(/xarop-pa-toss\/layer-zero/g, DEFAULT_REPO_SLUG);
@@ -181,7 +179,9 @@ export function resolveUiConfig(
         ...defaults.hero,
         buttons: defaults.hero.buttons.filter((b) => b.enabled !== false),
       },
-      navItems: defaults.navItems.filter((n) => n.enabled !== false),
+      navItems: defaults.navItems.filter(
+        (n) => n.enabled !== false && n.id !== 'keebs'
+      ),
     };
   }
 
@@ -194,15 +194,17 @@ export function resolveUiConfig(
     ? partialUi.navItems
     : defaults.navItems;
 
+  const rawBrand =
+    typeof partialUi.brandTitle === 'string' && partialUi.brandTitle.trim()
+      ? partialUi.brandTitle.trim()
+      : defaults.brandTitle;
+
   return {
-    brandTitle:
-      typeof partialUi.brandTitle === 'string' && partialUi.brandTitle.trim()
-        ? partialUi.brandTitle
-        : defaults.brandTitle,
+    brandTitle: rawBrand === 'Layer Zero' ? 'xarop.link' : rawBrand,
     hero: {
       windowTitle:
         typeof rawHero.windowTitle === 'string' && rawHero.windowTitle.trim()
-          ? rawHero.windowTitle
+          ? rawHero.windowTitle.replace(/Layer Zero/g, 'xarop.link')
           : defaults.hero.windowTitle,
       headline:
         typeof rawHero.headline === 'string' && rawHero.headline.trim()
@@ -220,9 +222,13 @@ export function resolveUiConfig(
         typeof rawHero.activeProjectText === 'string'
           ? rawHero.activeProjectText
           : defaults.hero.activeProjectText,
-      buttons: rawButtons.filter((b) => b && b.enabled !== false),
+      buttons: rawButtons.filter(
+        (b) => b && b.enabled !== false && b.target !== 'keebs'
+      ),
     },
-    navItems: rawNavItems.filter((n) => n && n.enabled !== false),
+    navItems: rawNavItems.filter(
+      (n) => n && n.enabled !== false && n.id !== 'keebs'
+    ),
   };
 }
 
@@ -239,3 +245,61 @@ export function interpolateButtonLabel(
     .replace(/\{opTotalGates\}/g, String(stats.opTotalGates ?? 0))
     .replace(/\{completionPercent\}/g, String(stats.completionPercent ?? 0));
 }
+
+export function matchesLogSearchQuery(
+  post: {
+    title?: string | null;
+    summary?: string | null;
+    description?: string | null;
+    content?: string | null;
+    tags?: string[] | null;
+  },
+  query?: string | null
+): boolean {
+  const q = String(query || '').trim().toLowerCase();
+  if (!q) return true;
+  const title = String(post?.title || '').toLowerCase();
+  const description = String(
+    post?.summary ?? post?.description ?? ''
+  ).toLowerCase();
+  return title.includes(q) || description.includes(q);
+}
+
+export function resolveSidebarPictureUrl(avatarUrl?: string | null): string {
+  const trimmed = String(avatarUrl || '').trim();
+  return trimmed || './sidebar_picture.png';
+}
+
+export function normalizeBioConfig(
+  rawBio?: Record<string, unknown> | null,
+  defaultRole: string = 'Infrastructure & DevOps · .NET'
+): {
+  role: string;
+  avatarUrl: string;
+  logsRepo: string;
+} {
+  if (!rawBio || typeof rawBio !== 'object') {
+    return {
+      role: defaultRole,
+      avatarUrl: './sidebar_picture.png',
+      logsRepo: DEFAULT_REPO_SLUG,
+    };
+  }
+  const rawRole = String(rawBio.role || '').trim();
+  const cleanRole =
+    !rawRole ||
+    rawRole === 'Infrastructure & DevOps Engineer · .NET Developer'
+      ? defaultRole
+      : rawRole;
+  return {
+    role: cleanRole,
+    avatarUrl: resolveSidebarPictureUrl(
+      typeof rawBio.avatarUrl === 'string' ? rawBio.avatarUrl : ''
+    ),
+    logsRepo: normalizeRepoSlug(
+      typeof rawBio.logsRepo === 'string' ? rawBio.logsRepo : ''
+    ),
+  };
+}
+
+

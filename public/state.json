@@ -1,5 +1,5 @@
 {
-  "_comment": "Layer Zero Canonical State — Edit this file and commit via Git CLI to update Operation Flaggo & DevOps Roadmap progress on the live site.",
+  "_comment": "xarop.link Canonical State — Edit this file and commit via Git CLI to update Operation Flaggo & DevOps Roadmap progress on the live site.",
   "bio": {
     "name": "Ricardo Giro",
     "handle": "xarop_pa_toss",
@@ -9,19 +9,20 @@
     "logsPath": "logs",
     "giteaBaseUrl": "",
     "giteaUser": "xarop_pa_toss",
-    "role": "Infrastructure & DevOps Engineer · .NET Developer",
-    "summary": "Systems and infrastructure engineer & dotnet dev transitioning operational administration experience into reproducible Linux, cloud networking, Terraform IaC, Docker containerization, and automated CI/CD pipelines.",
-    "pitch": "Building Flaggo — a lightweight, self-hosted 4-app Feature Flag & Runtime Configuration Platform decoupling code deployment from feature release.",
-    "stack": "C# / .NET · Linux (Systemd / Journalctl) · Terraform · AWS & Azure · Docker Compose · PostgreSQL · GitHub Actions & Self-Hosted Gitea · Bash & PowerShell"
+    "avatarUrl": "./sidebar_picture.png",
+    "role": "Infrastructure & DevOps · .NET",
+    "summary": "Systems & .NET engineer focused on reproducible Linux, Terraform IaC, Docker, and automated CI/CD pipelines.",
+    "pitch": "Self-hosted 4-app feature flag & runtime configuration platform.",
+    "stack": "C# / .NET · Linux · Terraform · AWS & Azure · Docker · PostgreSQL · GitHub Actions · Bash & PowerShell"
   },
   "ui": {
-    "brandTitle": "Layer Zero",
+    "brandTitle": "xarop.link",
     "hero": {
-      "windowTitle": "Layer Zero — Ricardo Giro",
-      "headline": "Ricardo Giro — Infrastructure, DevOps & Engineering Hub",
-      "activeProjectLabel": "Active Roadmap Project:",
+      "windowTitle": "xarop.link — Ricardo Giro",
+      "headline": "Ricardo Giro — Infrastructure, DevOps & .NET",
+      "activeProjectLabel": "Active Project:",
       "activeProjectName": "Flaggo",
-      "activeProjectText": "— a lightweight, self-hosted 4-app Feature Flag & Runtime Configuration Platform decoupling code deployment from feature release.",
+      "activeProjectText": "— self-hosted 4-app feature flag & runtime config platform.",
       "buttons": [
         {
           "id": "btn-flaggo",
@@ -61,7 +62,6 @@
       { "id": "logs", "label": "The Logs", "enabled": true },
       { "id": "roadmap", "label": "DevOps Roadmap", "enabled": true },
       { "id": "operation", "label": "Operation Flaggo", "enabled": true },
-      { "id": "keebs", "label": "Keebs", "enabled": true },
       { "id": "projects", "label": "Other Stuff", "enabled": true }
     ]
   },

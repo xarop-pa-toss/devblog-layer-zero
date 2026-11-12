@@ -12,6 +12,9 @@ import {
   shouldExecuteRemoteIndex,
   resolveUiConfig,
   interpolateButtonLabel,
+  matchesLogSearchQuery,
+  resolveSidebarPictureUrl,
+  normalizeBioConfig,
 } from './gitops';
 
 test('normalizeRepoSlug defaults legacy and empty slugs to xarop-pa-toss/devblog-layer-zero', () => {
@@ -34,7 +37,7 @@ test('isGitHubPagesHost and detectHostEnvironment classify xarop.link, AI Studio
 });
 
 test('decodeGitHubBase64 decodes multi-line base64 UTF-8 strings accurately', () => {
-  const original = 'Layer Zero — Ricardo Giro · Operation Flaggo';
+  const original = 'xarop.link — Ricardo Giro · Operation Flaggo';
   const encoded = Buffer.from(original, 'utf-8').toString('base64');
   const withNewlines = encoded.slice(0, 12) + '\n' + encoded.slice(12);
   assert.equal(decodeGitHubBase64(withNewlines), original);
@@ -45,7 +48,7 @@ test('extractHtmlBootPayload extracts style blocks and inline app script while s
 <html>
 <head>
   <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-  <style>:root { --bg-canvas: #F1F3F4; }</style>
+  <style>:root { --bg-canvas: #E2ECEE; }</style>
 </head>
 <body>
   <div id="root"></div>
@@ -55,7 +58,7 @@ test('extractHtmlBootPayload extracts style blocks and inline app script while s
 
   const payload = extractHtmlBootPayload(sampleHtml);
   assert.equal(payload.styles.length, 1);
-  assert.equal(payload.styles[0], ':root { --bg-canvas: #F1F3F4; }');
+  assert.equal(payload.styles[0], ':root { --bg-canvas: #E2ECEE; }');
   assert.ok(payload.appScript.includes('ReactDOM.createRoot'));
   assert.ok(payload.appScript.includes('xarop-pa-toss/devblog-layer-zero'));
   assert.equal(payload.appScript.includes('xarop-pa-toss/layer-zero'), false);
@@ -68,28 +71,35 @@ test('shouldExecuteRemoteIndex triggers when GitHub blob SHA changes or forceRem
   assert.equal(shouldExecuteRemoteIndex('', BASELINE_GITHUB_INDEX_SHA, false), false);
 });
 
-test('resolveUiConfig omits the Keebs hero button by default and respects enabled flags in state.json', () => {
+test('resolveUiConfig defaults brandTitle to xarop.link and filters out any keebs items', () => {
   const defaultResolved = resolveUiConfig(null);
+  assert.equal(defaultResolved.brandTitle, 'xarop.link');
   assert.equal(
-    defaultResolved.hero.buttons.some((b) => b.label.toLowerCase().includes('keebs')),
+    defaultResolved.navItems.some((n) => n.id === 'keebs'),
     false
   );
-  assert.equal(defaultResolved.hero.buttons.length, 4);
-  assert.equal(defaultResolved.navItems.length, 5);
+  assert.equal(defaultResolved.navItems.length, 4);
 
   const customResolved = resolveUiConfig({
+    brandTitle: 'Layer Zero',
     hero: {
       ...DEFAULT_UI_CONFIG.hero,
       headline: 'Custom Headline From Repo',
       buttons: [
         { id: 'b1', label: 'Visible CTA', actionType: 'section', target: 'operation', enabled: true },
-        { id: 'b2', label: 'Hidden CTA', actionType: 'section', target: 'keebs', enabled: false },
+        { id: 'b2', label: 'Legacy Keebs CTA', actionType: 'section', target: 'keebs', enabled: true },
       ],
     },
+    navItems: [
+      { id: 'logs', label: 'The Logs', enabled: true },
+      { id: 'keebs', label: 'Keebs', enabled: true },
+    ],
   });
+  assert.equal(customResolved.brandTitle, 'xarop.link');
   assert.equal(customResolved.hero.headline, 'Custom Headline From Repo');
   assert.equal(customResolved.hero.buttons.length, 1);
-  assert.equal(customResolved.hero.buttons[0].label, 'Visible CTA');
+  assert.equal(customResolved.navItems.length, 1);
+  assert.equal(customResolved.navItems[0].id, 'logs');
 });
 
 test('interpolateButtonLabel replaces roadmap and Flaggo progress placeholders', () => {
@@ -99,3 +109,37 @@ test('interpolateButtonLabel replaces roadmap and Flaggo progress placeholders',
   );
   assert.equal(label, 'Operation Flaggo (3/5 Gates) - 60%');
 });
+
+test('matchesLogSearchQuery filters strictly by title and summary/description, ignoring body content', () => {
+  const samplePost = {
+    title: 'On GitOps, or how I run this blog using Git!',
+    summary: 'How xarop.link loads Markdown log entries from logs/*.md.',
+    content: 'SecretBodyOnlyKeyword YAML frontmatter details inside the post body.',
+    tags: ['git', 'xarop-link', 'gitops'],
+  };
+
+  assert.equal(matchesLogSearchQuery(samplePost, ''), true);
+  assert.equal(matchesLogSearchQuery(samplePost, 'GitOps'), true);
+  assert.equal(matchesLogSearchQuery(samplePost, 'Markdown log entries'), true);
+  assert.equal(matchesLogSearchQuery(samplePost, 'SecretBodyOnlyKeyword'), false);
+  assert.equal(matchesLogSearchQuery(samplePost, 'frontmatter'), false);
+});
+
+test('resolveSidebarPictureUrl defaults to ./sidebar_picture.png when empty', () => {
+  assert.equal(resolveSidebarPictureUrl(''), './sidebar_picture.png');
+  assert.equal(resolveSidebarPictureUrl(null), './sidebar_picture.png');
+  assert.equal(resolveSidebarPictureUrl('./sidebar_picture.png'), './sidebar_picture.png');
+});
+
+test('normalizeBioConfig keeps sidebar role/skills stable across syncs', () => {
+  assert.equal(
+    normalizeBioConfig({ role: 'Infrastructure & DevOps Engineer · .NET Developer' }).role,
+    'Infrastructure & DevOps · .NET'
+  );
+  assert.equal(
+    normalizeBioConfig({ role: '' }).role,
+    'Infrastructure & DevOps · .NET'
+  );
+});
+
+

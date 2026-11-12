@@ -20,7 +20,6 @@ function generateFolderIndex(relFolder) {
 }
 
 generateFolderIndex('public/logs');
-generateFolderIndex('public/keebs');
 
 if (process.argv.includes('--bundle-dist')) {
   const distDir = path.join(rootDir, 'dist');
@@ -32,6 +31,10 @@ if (process.argv.includes('--bundle-dist')) {
 
   if (fs.existsSync(publicDir)) {
     fs.cpSync(publicDir, distDir, { recursive: true });
+  }
+  const rootSidebarPic = path.join(rootDir, 'sidebar_picture.png');
+  if (fs.existsSync(rootSidebarPic)) {
+    fs.copyFileSync(rootSidebarPic, path.join(distDir, 'sidebar_picture.png'));
   }
   if (fs.existsSync(indexHtml)) {
     fs.copyFileSync(indexHtml, path.join(distDir, 'index.html'));
