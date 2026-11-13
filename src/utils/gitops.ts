@@ -302,4 +302,49 @@ export function normalizeBioConfig(
   };
 }
 
+export function normalizeStatusMap(
+  rawMap?: Record<string, unknown> | null
+): Record<string, string> {
+  if (!rawMap || typeof rawMap !== 'object') return {};
+  const out: Record<string, string> = {};
+  for (const key of Object.keys(rawMap)) {
+    if (key.startsWith('_')) continue;
+    const val = rawMap[key];
+    if (typeof val === 'string') {
+      out[key] = val.trim().toLowerCase() || 'pending';
+    } else if (
+      val &&
+      typeof val === 'object' &&
+      'status' in val &&
+      typeof (val as { status?: unknown }).status === 'string'
+    ) {
+      out[key] =
+        ((val as { status: string }).status || '').trim().toLowerCase() ||
+        'pending';
+    }
+  }
+  return out;
+}
+
+export function normalizeDeliverableMap(
+  rawMap?: Record<string, unknown> | null
+): Record<string, boolean> {
+  if (!rawMap || typeof rawMap !== 'object') return {};
+  const out: Record<string, boolean> = {};
+  for (const key of Object.keys(rawMap)) {
+    if (key.startsWith('_')) continue;
+    const val = rawMap[key];
+    if (typeof val === 'boolean') {
+      out[key] = val;
+    } else if (val && typeof val === 'object') {
+      const obj = val as { done?: unknown; status?: unknown };
+      out[key] = Boolean(
+        obj.done ?? (obj.status === 'independent' || obj.status === 'done')
+      );
+    }
+  }
+  return out;
+}
+
+
 

@@ -1547,6 +1547,36 @@
         };
       }
 
+      function normalizeStatusMap(rawMap) {
+        if (!rawMap || typeof rawMap !== 'object') return {};
+        const out = {};
+        Object.keys(rawMap).forEach(key => {
+          if (key.startsWith('_')) return;
+          const val = rawMap[key];
+          if (typeof val === 'string') {
+            out[key] = val.trim().toLowerCase() || STATUS.PENDING;
+          } else if (val && typeof val === 'object' && typeof val.status === 'string') {
+            out[key] = val.status.trim().toLowerCase() || STATUS.PENDING;
+          }
+        });
+        return out;
+      }
+
+      function normalizeDeliverableMap(rawMap) {
+        if (!rawMap || typeof rawMap !== 'object') return {};
+        const out = {};
+        Object.keys(rawMap).forEach(key => {
+          if (key.startsWith('_')) return;
+          const val = rawMap[key];
+          if (typeof val === 'boolean') {
+            out[key] = val;
+          } else if (val && typeof val === 'object') {
+            out[key] = Boolean(val.done ?? val.status === 'independent' ?? val.status === 'done');
+          }
+        });
+        return out;
+      }
+
       function applyCanonicalState(data) {
         if (!data || typeof data !== 'object') return;
         if (data.bio) {
@@ -1568,12 +1598,12 @@
         if (Array.isArray(data.flaggoMilestones) && data.flaggoMilestones.length > 0) {
           setFlaggoMilestones(data.flaggoMilestones);
         }
-        if (data.tasks) setTasks(data.tasks);
-        if (data.gates) setGates(data.gates);
-        if (data.opTasks) setOpTasks(data.opTasks);
-        if (data.opGates) setOpGates(data.opGates);
-        if (data.deliverables) setDeliverables(data.deliverables);
-        if (data.assessments) setAssessments(data.assessments);
+        if (data.tasks) setTasks(normalizeStatusMap(data.tasks));
+        if (data.gates) setGates(normalizeStatusMap(data.gates));
+        if (data.opTasks) setOpTasks(normalizeStatusMap(data.opTasks));
+        if (data.opGates) setOpGates(normalizeStatusMap(data.opGates));
+        if (data.deliverables) setDeliverables(normalizeDeliverableMap(data.deliverables));
+        if (data.assessments) setAssessments(normalizeStatusMap(data.assessments));
         if (data.branch !== undefined) setBranch(data.branch);
         if (data.portfolio) setPortfolio(data.portfolio);
         if (data.applications) setApplications(data.applications);
@@ -1798,7 +1828,7 @@
             const reposData = await reposRes.json();
             if (Array.isArray(reposData)) {
               setGithubRepos(reposData);
-              for (const r of reposData.slice(0, 3)) {
+              for (const r of reposData.filter(repo => repo && Number(repo.size) > 0).slice(0, 3)) {
                 try {
                   const cRes = await fetch(`https://api.github.com/repos/${r.full_name}/commits?per_page=2`);
                   if (cRes.ok) {
@@ -2059,54 +2089,63 @@
 
       // --- SECTION 1: THE LOGS (SIMPLE & CONCISE) ---
       const renderHomeLogs = () => h('div', { style: { display: 'flex', flexDirection: 'column', gap: '1.25rem' } },
-        h('div', { className: 'os-window', style: { padding: '1.15rem 1.35rem', display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '0.85rem' } },
+        h('div', { className: 'os-window', style: { padding: '1.15rem 1.35rem', display: 'flex', flexDirection: 'column', gap: '0.85rem' } },
           h('div', null,
             h('h2', { className: 'font-display', style: { fontSize: '1.45rem', fontWeight: 700, color: '#4A2552' } }, 'The Logs'),
             h('p', { className: 'font-mono', style: { fontSize: '12px', color: '#49585E' } },
-              `Markdown notes from ${gitOpsSync.repo}`
+              'The ramblings below are occasionally useful'
             )
           ),
-          h('div', { style: { display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.6rem' } },
+
+          h('div', {
+            style: {
+              display: 'flex',
+              flexWrap: 'wrap',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              gap: '0.5rem 0.85rem',
+              paddingTop: '0.7rem',
+              borderTop: '1px solid rgba(42, 120, 134, 0.28)'
+            }
+          },
+            h('div', { style: { display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.35rem' } },
+              h('button', {
+                type: 'button',
+                onClick: () => setSelectedTag('all'),
+                className: 'font-mono',
+                style: {
+                  padding: '0.28rem 0.65rem',
+                  fontSize: '11.5px',
+                  backgroundColor: selectedTag === 'all' ? '#4A2552' : '#EDF3F5',
+                  color: selectedTag === 'all' ? '#FFFFFF' : '#1E1721',
+                  fontWeight: selectedTag === 'all' ? 600 : 400
+                }
+              }, `All (${posts.length})`),
+              ...allTags.map(tag =>
+                h('button', {
+                  key: tag,
+                  type: 'button',
+                  onClick: () => setSelectedTag(tag),
+                  className: 'font-mono',
+                  style: {
+                    padding: '0.28rem 0.65rem',
+                    fontSize: '11.5px',
+                    backgroundColor: selectedTag === tag ? '#2A7886' : '#EDF3F5',
+                    color: selectedTag === tag ? '#FFFFFF' : '#1E1721',
+                    fontWeight: selectedTag === tag ? 600 : 400
+                  }
+                }, `#${tag}`)
+              )
+            ),
             h('input', {
               type: 'search',
               ariaLabel: 'Search The Logs',
-              placeholder: 'Filter logs...',
+              placeholder: 'Search...',
               value: searchQuery,
               onChange: e => setSearchQuery(e.target.value),
               className: 'os-input font-mono',
-              style: { width: '190px', padding: '0.4rem 0.65rem', fontSize: '12px' }
+              style: { width: '135px', padding: '0.28rem 0.55rem', fontSize: '11.5px' }
             })
-          )
-        ),
-
-        // Tag Filter Bar
-        h('div', { className: 'os-panel', style: { padding: '0.5rem 0.65rem', display: 'flex', flexWrap: 'wrap', gap: '0.4rem' } },
-          h('button', {
-            type: 'button',
-            onClick: () => setSelectedTag('all'),
-            className: 'font-mono',
-            style: {
-              padding: '0.3rem 0.7rem',
-              fontSize: '11.5px',
-              backgroundColor: selectedTag === 'all' ? '#4A2552' : 'transparent',
-              color: selectedTag === 'all' ? '#FFFFFF' : '#1E1721',
-              fontWeight: selectedTag === 'all' ? 600 : 400
-            }
-          }, `All (${posts.length})`),
-          ...allTags.map(tag =>
-            h('button', {
-              key: tag,
-              type: 'button',
-              onClick: () => setSelectedTag(tag),
-              className: 'font-mono',
-              style: {
-                padding: '0.3rem 0.7rem',
-                fontSize: '11.5px',
-                backgroundColor: selectedTag === tag ? '#2A7886' : 'transparent',
-                color: selectedTag === tag ? '#FFFFFF' : '#1E1721',
-                fontWeight: selectedTag === tag ? 600 : 400
-              }
-            }, `#${tag}`)
           )
         ),
 
@@ -2116,7 +2155,8 @@
             h('article', {
               key: post.id,
               className: 'os-window',
-              style: { padding: '1.35rem 1.5rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }
+              onClick: () => setReadingPost(post),
+              style: { padding: '1.35rem 1.5rem', display: 'flex', flexDirection: 'column', gap: '0.65rem', cursor: 'pointer' }
             },
               h('div', { className: 'font-mono', style: { fontSize: '11.5px', color: '#49585E' } },
                 h('span', { style: { color: '#4A2552', fontWeight: 600 } }, String(idx + 1).padStart(2, '0')),
@@ -2128,21 +2168,11 @@
               h('h3', { className: 'font-display', style: { fontSize: '1.25rem', fontWeight: 700, color: '#4A2552' } },
                 h('button', {
                   type: 'button',
-                  onClick: () => setReadingPost(post),
+                  onClick: (e) => { e.stopPropagation(); setReadingPost(post); },
                   style: { textAlign: 'left', color: 'inherit' }
                 }, post.title)
               ),
-              h('p', { style: { fontSize: '0.92rem', color: '#1E1721', maxWidth: '72ch' } }, post.summary),
-              h('div', { style: { display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '0.65rem', paddingTop: '0.75rem', borderTop: '1px solid rgba(42, 120, 134, 0.25)' } },
-                h('span', { className: 'font-mono', style: { fontSize: '11px', color: '#49585E' } }, post.source || 'logs/'),
-                h('div', { style: { display: 'flex', gap: '0.5rem' } },
-                  h('button', {
-                    type: 'button',
-                    onClick: () => setReadingPost(post),
-                    className: 'os-btn os-btn-primary'
-                  }, 'Read Post')
-                )
-              )
+              h('p', { style: { fontSize: '0.92rem', color: '#1E1721', maxWidth: '72ch' } }, post.summary)
             )
           )
         )

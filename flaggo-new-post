@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [ "$#" -lt 1 ] || [ -z "${1:-}" ]; then
+  echo "Usage: flaggo-new-post <post-slug>"
+  echo "Example: ./flaggo-new-post ramblings-on-code"
+  exit 1
+fi
+
+# Resolve repo root directory relative to this script (works even via symlink)
+SOURCE="${BASH_SOURCE[0]}"
+while [ -h "$SOURCE" ]; do
+  DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
+  SOURCE="$(readlink "$SOURCE")"
+  [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
+done
+REPO_ROOT="$(cd -P "$(dirname "$SOURCE")" && pwd)"
+
+TEMPLATE_FILE="${REPO_ROOT}/log-template.md"
+POSTS_DIR="${REPO_ROOT}/public/logs"
+
+if [ ! -f "$TEMPLATE_FILE" ]; then
+  echo "Error: Template file not found at ${TEMPLATE_FILE}" >&2
+  exit 1
+fi
+
+# Normalize slug: lowercase, strip .md extension if provided, convert spaces/underscores to hyphens
+RAW_SLUG="$1"
+SLUG="$(echo "$RAW_SLUG" | tr '[:upper:]' '[:lower:]' | sed -E 's/\.md$//; s/[^a-z0-9]+/-/g; s/^-+|-+$//g')"
+
+if [ -z "$SLUG" ]; then
+  echo "Error: Invalid post slug '$1'" >&2
+  exit 1
+fi
+
+TODAY="$(date +%Y-%m-%d)"
+TARGET_FILE="${POSTS_DIR}/${TODAY}-${SLUG}.md"
+
+mkdir -p "$POSTS_DIR"
+
+if [ -e "$TARGET_FILE" ]; then
+  echo "Error: Post already exists at ${TARGET_FILE}" >&2
+  exit 1
+fi
+
+# Copy the template into public/logs/YYYY-MM-DD-<slug>.md
+cp "$TEMPLATE_FILE" "$TARGET_FILE"
+
+# Stamp today's date into the copied file's frontmatter
+sed -i.bak "s/date: \"YYYY-MM-DD\"/date: \"${TODAY}\"/" "$TARGET_FILE" && rm -f "${TARGET_FILE}.bak"
+
+echo "Created new log entry: ${TARGET_FILE}"

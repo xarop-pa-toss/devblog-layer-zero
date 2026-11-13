@@ -15,6 +15,8 @@ import {
   matchesLogSearchQuery,
   resolveSidebarPictureUrl,
   normalizeBioConfig,
+  normalizeStatusMap,
+  normalizeDeliverableMap,
 } from './gitops';
 
 test('normalizeRepoSlug defaults legacy and empty slugs to xarop-pa-toss/devblog-layer-zero', () => {
@@ -141,5 +143,29 @@ test('normalizeBioConfig keeps sidebar role/skills stable across syncs', () => {
     'Infrastructure & DevOps · .NET'
   );
 });
+
+test('normalizeStatusMap and normalizeDeliverableMap support both self-documenting objects and plain strings/booleans', () => {
+  const parsedStatus = normalizeStatusMap({
+    fm1_1: { status: 'independent', task: 'Start Flaggo 4-app stack' },
+    fm1_2: 'ai_assisted',
+    _comment: 'ignored',
+  });
+  assert.deepEqual(parsedStatus, {
+    fm1_1: 'independent',
+    fm1_2: 'ai_assisted',
+  });
+
+  const parsedDeliv = normalizeDeliverableMap({
+    del_1: { done: true, name: 'Git Repository' },
+    del_2: { done: false, name: 'Architecture Diagram' },
+    del_3: true,
+  });
+  assert.deepEqual(parsedDeliv, {
+    del_1: true,
+    del_2: false,
+    del_3: true,
+  });
+});
+
 
 
